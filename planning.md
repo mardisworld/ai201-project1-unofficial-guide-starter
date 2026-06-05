@@ -20,16 +20,17 @@
 
 | # | Source | Description | URL or location |
 |---|--------|-------------|-----------------|
-| 1 | | | |
-| 2 | | | |
-| 3 | | | |
-| 4 | | | |
-| 5 | | | |
-| 6 | | | |
-| 7 | | | |
-| 8 | | | |
-| 9 | | | |
-| 10 | | | |
+| 1 | www.forbes.com|  Should You Switch Your Student Loans To The New Repayment Assistance Plan? | https://www.forbes.com/sites/adamminsky/2026/05/14/should-you-switch-your-student-loans-to-the-new-repayment-assistance-plan/ |
+| 2 | www.forbes.com | These Student Loan Borrowers May Get Locked Out Of Key Repayment Plan Unless They Act Quickly| | https://www.forbes.com/sites/adamminsky/2026/05/06/these-student-loan-borrowers-may-get-locked-out-of-key-repayment-plan-unless-they-act-quickly/ |
+| 3 | https://www.savingforcollege.com| How Will Your Student Loan Payment Change With the Repayment Assistance Plan (RAP)? | https://www.savingforcollege.com/article/student-loan-repayment-assistance-plan-rap |
+| 4 | www.forbes.com | Education Department Sends Mass Warnings To Student Loan Borrowers To Change Repayment Plans, Or Else |  https://www.forbes.com/sites/adamminsky/2026/05/26/education-department-sends-mass-warnings-to-student-loan-borrowers-to-change-repayment-plans-or-else/ |
+| 5 | https://www.cnbc.com | Student loan borrowers will have two new repayment options come July 1. Here's how to pick one | https://www.cnbc.com/amp/2026/05/29/student-loan-borrowers-new-repayment-plans.html |
+| 6 | https://www.cbsnews.com/ | 4 things student loan borrowers should do before July 1 | https://www.cbsnews.com/news/what-student-loan-borrowers-should-do-before-july-2026/ |
+| 7 | https://studentaid.gov/ | Beautiful Bill Act Updates | https://studentaid.gov/announcements-events/big-updates |
+| 8 | https://www.nytimes.com | Student Loan Repayments Are Being Overhauled. What Borrowers Should Know. |  https://www.nytimes.com/2026/05/25/your-money/student-loans-repayment-save-biden.html |
+| 9 | https://www.earnest.com/| Income-driven repayment plans are changing: What borrowers need to know in 2026 | https://www.earnest.com/blog/income-driven-repayment-changes?cs=0&hl=en-US&biw=1710&bih=802 |
+| 10 | https://ticas.org/ | Upcoming Changes to Income-Driven Repayment Plans | https://ticas.org/affordability-2/upcoming-changes-to-income-driven-repayment-plans/?cs=0&hl=en-US&biw=1710&bih=802 |
+| 11 | https://studentloanborrowerassistance.org/ | Big Bill Means Big Changes For Student Loan Borrowers: What You Need to Know | https://studentloanborrowerassistance.org/big-bill-means-big-changes-for-student-loan-borrowers-what-you-need-to-know/ |
 
 ---
 
