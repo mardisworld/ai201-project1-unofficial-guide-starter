@@ -45,10 +45,29 @@ def run_ingestion():
 # Chat handler
 # ---------------------------------------------------------------------------
 
-def chat(message, history):
-    if not message.strip():
-        return ""
+def _normalize_chat_history(chat_history):
+    if not chat_history:
+        return []
 
+    normalized = []
+    for item in chat_history:
+        if isinstance(item, dict) and "role" in item and "content" in item:
+            normalized.append(item)
+        elif isinstance(item, (list, tuple)) and len(item) == 2:
+            user, assistant = item
+            normalized.append({"role": "user", "content": user})
+            normalized.append({"role": "assistant", "content": assistant})
+        else:
+            # Fall back to preserving unknown items if they are already valid dicts
+            normalized.append(item)
+    return normalized
+
+
+def chat(message, chat_history):
+    if not message.strip():
+        return chat_history or [], "", ""
+
+    chat_history = _normalize_chat_history(chat_history or [])
     retrieved = retrieve(message)
     answer = generate_response(message, retrieved)
 
@@ -57,14 +76,17 @@ def chat(message, history):
         for index, chunk in enumerate(retrieved, start=1):
             snippet = chunk["text"].replace("\n", " ").strip()
             chunk_debug.append(
-                f"{index}. {chunk['student_loan_article']} (distance={chunk['distance']:.4f}, words={len(snippet.split())})\n"
+                f"{index}. {chunk['student_loan_article']} (score={chunk.get('similarity', 0.0):.4f}, distance={chunk['distance']:.4f}, words={len(snippet.split())})\n"
                 f"   {snippet}"
             )
-        debug_text = "Retrieved chunks:\n" + "\n\n".join(chunk_debug) + "\n\n---\n"
+        debug_text = "Retrieved chunks:\n" + "\n\n".join(chunk_debug)
     else:
-        debug_text = "No chunks were retrieved for this query.\n\n---\n"
+        debug_text = "No chunks were retrieved for this query."
 
-    return debug_text + answer
+    debug_text += "\n\n---\n"
+    chat_history.append({"role": "user", "content": message})
+    chat_history.append({"role": "assistant", "content": answer})
+    return chat_history, "", debug_text
 
 
 # ---------------------------------------------------------------------------
@@ -85,33 +107,12 @@ with gr.Blocks() as demo:
     """)
 
     with gr.Row():
-        with gr.Column(scale=3):
-            gr.ChatInterface(
-                fn=chat,
-                chatbot=gr.Chatbot(
-                    height=440,
-                    placeholder=(
-                        "<div style='text-align:center; color:#9ca3af; margin-top:3rem;'>"
-                        "Ask a student loan question to get started — answers stay grounded in the documents."
-                        "</div>"
-                    ),
-                ),
-                textbox=gr.Textbox(
-                    placeholder='e.g. "How do I defer payments while in school?"',
-                    container=False,
-                    scale=7,
-                ),
-                examples=[
-                    "Why could RAP become more expensive over time despite its low starting percentages?",
-                    "What must a Parent PLUS borrower do to keep access to an income-driven plan, and which plan can they get?",
-                    "WHow do 'old IBR' and 'new IBR' differ?      ",
-                    "What is the apparent contradiction in the Education Department's PAYE rules?",
-                    "What risk does consolidating loans pose to forgiveness progress?",
-                ],
-                cache_examples=False,
-            )
-
         with gr.Column(scale=1, min_width=280):
+            debug_box = gr.Textbox(
+                label="Retrieval debug",
+                interactive=False,
+                lines=12,
+            )
             gr.HTML("""
                 <div style="background:#f5f3ff; border:1px solid #ddd6fe;
                             border-radius:10px; padding:1rem; margin-top:0.5rem;">
@@ -143,6 +144,34 @@ with gr.Blocks() as demo:
                     </p>
                 </div>
             """)
+
+        with gr.Column(scale=3):
+            chatbot = gr.Chatbot(
+                height=440,
+                label="Advisor Chat",
+                placeholder=(
+                    "Ask a student loan question to get started — answers stay grounded in the documents."
+                ),
+            )
+            textbox = gr.Textbox(
+                placeholder='e.g. "How do I defer payments while in school?"',
+                container=False,
+                scale=7,
+            )
+            examples = gr.Examples(
+                examples=[
+                    "Why could RAP become more expensive over time despite its low starting percentages?",
+                    "What must a Parent PLUS borrower do to keep access to an income-driven plan, and which plan can they get?",
+                    "How do 'old IBR' and 'new IBR' differ?",
+                    "What is the apparent contradiction in the Education Department's PAYE rules?",
+                    "What risk does consolidating loans pose to forgiveness progress?",
+                ],
+                inputs=textbox,
+                outputs=[chatbot, textbox, debug_box],
+                fn=chat,
+                cache_examples=False,
+            )
+            textbox.submit(chat, [textbox, chatbot], [chatbot, textbox, debug_box])
 
 
 if __name__ == "__main__":

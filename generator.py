@@ -47,11 +47,14 @@ My response should:
         "Do not use any outside knowledge, prior experience, or assumptions. Treat the excerpts as the only source of truth. "
         "Only answer if the needed information is explicitly present in the excerpts. Do not infer, invent, or fill in missing details. "
         "If the excerpts do not contain enough information to answer, say: \"I could not find the answer in the provided excerpts.\" "
-        "Search all provided excerpts before answering. Do not stop after finding one relevant excerpt — keep reviewing every provided excerpt. "
-        "If the answer contains information from multiple excerpts, combine them and cite each article that supports any part of your answer. "
+        "Search ALL provided excerpts before answering. Do not stop after finding one relevant excerpt — read every excerpt, including lower-ranked ones, before you respond. "
+        "Many questions have more than one supporting factor spread across different excerpts. Identify and report EVERY distinct factor, reason, or detail that any excerpt provides — do not stop once you have one. "
+        "A weaker or lower-ranked excerpt can still contain an essential part of the answer; include it as long as it directly addresses the question. "
+        "If the answer contains information from multiple excerpts, combine them into a complete answer and cite each article that supports any part of it. "
         "List every article that contains evidence for any claim you make. Do not omit a relevant source simply because another source also supports the claim. "
         "Do not cite a source unless it directly supports a claim in your answer. If you are not certain the answer is fully supported by the excerpts, say that the answer could not be determined from the provided excerpts. "
         "The final answer must end with a Sources line in this exact format: Sources: [Article A], [Article B]. "
+        "Use the article NAME shown after each 'Source N:' label — never write the literal 'Source N' label in the Sources line. "
         "Do not include any extra text after the Sources line. "
         "Do not invent answers, do not fill in missing details, and do not infer beyond the text. "
         "If the provided excerpts do not contain enough information to answer, say that you couldn't find the answer in the provided article excerpts."
@@ -68,7 +71,7 @@ My response should:
         "The following student loan article excerpts are available as context. Answer the question using only this information. "
         "Use the excerpts directly and cite the article name(s) you used. "
         "List every article that provides evidence for any part of your answer. "
-        "If the question asks for multiple reasons, list each reason separately and cite the supporting source(s). "
+        "If the question asks why something happens, enumerate every distinct reason or factor supported by the excerpts — not just the first one you find — and cite the supporting source(s) for each. "
         "Do not answer from memory or outside the provided excerpts. "
         "If the excerpts do not provide a complete answer, say that you could not find the answer in the provided excerpts. "
         "Ignore any excerpt that is not relevant to the question. "
@@ -114,12 +117,50 @@ def _format_source_line(retrieved_chunks):
 
 
 def _answer_has_sources(answer):
-    return bool(re.search(r"\bSources?:\s*\[", answer, flags=re.IGNORECASE))
+    # Match any "Sources:" line the model produced, with or without bracketed
+    # article names, so we don't append a duplicate Sources line.
+    return bool(re.search(r"\bSources?:\s*\S", answer, flags=re.IGNORECASE))
+
+
+def _normalize_source_line(answer, retrieved_chunks):
+    """Rewrite the model's trailing Sources line to use real article names.
+
+    The model sometimes cites positional labels ("Source 8") instead of the
+    article name. Map any "Source N" tokens back to retrieved_chunks[N-1] and
+    keep any names the model already wrote in brackets, de-duplicating in order.
+    """
+    match = re.search(r"(?im)^[^\S\n]*Sources?:[^\S\n]*(.*)$", answer)
+    if not match:
+        return answer
+
+    raw = match.group(1)
+    names = []
+
+    def _add(name):
+        name = name.strip()
+        if name and name not in names:
+            names.append(name)
+
+    # Tokens are either bracketed names "[...]" or positional "Source N".
+    for token in re.finditer(r"\[([^\]]+)\]|Source\s+(\d+)", raw, flags=re.IGNORECASE):
+        bracketed, source_num = token.group(1), token.group(2)
+        if bracketed:
+            _add(bracketed)
+        elif source_num:
+            idx = int(source_num) - 1
+            if 0 <= idx < len(retrieved_chunks):
+                _add(retrieved_chunks[idx].get("student_loan_article", ""))
+
+    if not names:
+        return answer
+
+    new_line = "Sources: " + ", ".join(f"[{name}]" for name in names)
+    return answer[: match.start()] + new_line
 
 
 def _ensure_sources(answer, retrieved_chunks):
     if _answer_has_sources(answer):
-        return answer
+        return _normalize_source_line(answer, retrieved_chunks)
 
     sources_line = _format_source_line(retrieved_chunks)
     if not sources_line:

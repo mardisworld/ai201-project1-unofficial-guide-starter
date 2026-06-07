@@ -68,7 +68,8 @@ def retrieve(query, n_results=N_RESULTS):
     Return a list of dicts, each with:
       - "text"                   : the chunk text
       - "student_loan_article" : the article name (pull this from metadatas)
-      - "distance"               : the similarity score (lower = more similar for cosine)
+      - "distance"               : the cosine distance (lower = more similar)
+      - "similarity"             : a convenience score computed as max(0.0, 1.0 - distance)
 
     Note: _collection.query() returns nested lists (one per query). You only
     have one query, so you'll want index [0] to get the actual results.
@@ -94,6 +95,7 @@ def retrieve(query, n_results=N_RESULTS):
             "section_header": metadata.get("section_header"),
             "chunk_id": metadata.get("chunk_id"),
             "distance": distance,
+            "similarity": max(0.0, 1.0 - distance),
         })
 
     return retrieved_chunks
