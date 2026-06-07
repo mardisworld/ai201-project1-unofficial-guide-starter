@@ -10,6 +10,7 @@
 ## Domain
 
 <!-- What domain did you choose? Why is this knowledge valuable and hard to find through official channels? -->
+Starting July 1, 2026, the One Big Beautiful Bill Act brings sweeping changes to federal student loans.Starting July 1, 2026, the One Big Beautiful Bill Act brings sweeping changes to federal student loans. The Graduate PLUS Loan program is eliminated entirely, and Parent PLUS Loans will be subject to new borrowing caps for the first time. Graduate and professional students will also face new annual and lifetime loan limits, while undergraduate borrowing remains unchanged. Most existing income-driven repayment plans are being replaced by the new Repayment Assistance Plan (RAP), though students who already borrowed before July 1 can generally continue under current terms for up to three more years. These changes are sweeping and affect millions of borrowers, would-be borrowers, and sometimes, their parents. The changes are difficult to understand and to act on, and the pressure to make a decision as to which plan to enroll in is confusing. My goal is to develop a tool to make it easier for people to understand which plan would best serve them, given their situation. 
 
 ---
 
@@ -183,9 +184,9 @@ More tuning is needed to get the desired result. I will commit here so you can s
 
 Results for strategy 4: All changes from Strategy 3 + N_RESULTS = 10 + strengthening the prompt to: 
 
-     -explicitly require using only provided excerpts
-     -ask for separate reasons when the question requests them
-     -require a final Sources: [...] listing
+     - explicitly require using only provided excerpts
+     - ask for separate reasons when the question requests them
+     - require a final Sources: [...] listing
 i    - included section headers in context blocks when available
 
 Finally, instead of getting a collection of chunks, I got the answer that included the information I was looking for. However, the app did not cite both of the sources I was looking for. I will make some more adjustment to ensure that all relevant information is cited in the sources. 
@@ -205,7 +206,17 @@ Strategy 5: App reverted to dropping 1 of 2 parts of answer, so Claude and I mad
 
 Evaluation: Chatbot gives perfect response, with all required information included in expected answer and even exceeds what was expected. It also provides the two expected sources. I am happy with the result!
 
-![alt text](<perfect chatbot response .png>)
+![alt text](<perfect chatbot response.png>)
+
+Strategy 6 (2026-06-07): Investigated a second test question that omitted part of its expected answer — "What must a Parent PLUS borrower do to keep access to an income-driven plan, and which plan can they get?" Expected the answer to include the step "make at least one payment under ICR" before the 2028 phase-out, but the chatbot left it out.
+
+Diagnosis: Unlike the RAP question (which was a *generation* problem — both chunks were retrieved and the model dropped one), this one is a **retrieval failure caused by chunking**. The "make at least one payment" detail lives in a single NYT chunk that opens "After consolidating, borrowers aren't done…" and never restates "Parent PLUS." For the Parent PLUS query it ranks ~184/334 (distance ≈ 0.64), far outside the top-10 (cutoff ≈ 0.45), so the generator never sees it.
+
+I tested two fixes empirically before committing to either:
+- Prepending the article title + section header to each chunk's embedded text → moved the chunk only from rank ~184 to ~133 (0.64 → 0.58). Not enough; reverted it (it also added redundancy and there was no measurable global benefit).
+- Simulated cross-section overlap (carrying the neighboring Parent PLUS chunk's text in) → 0.64 → 0.62. Also insufficient.
+
+Conclusion: the fact-bearing sentence is genuinely semantically distant from the "Parent PLUS" framing, so dense-retrieval tuning can't easily surface it. Documented as a known limitation in the README Failure Case Analysis. A real fix would need hybrid/keyword retrieval, query expansion, subject-resolution preprocessing, or a re-ranking stage — deferred rather than over-fitting the pipeline to one question. RAP question re-verified: still returns both factors (no regression).
 ---
 
 ## Retrieval Approach

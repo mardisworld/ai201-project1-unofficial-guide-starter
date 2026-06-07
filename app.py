@@ -118,24 +118,24 @@ with gr.Blocks() as demo:
                             border-radius:10px; padding:1rem; margin-top:0.5rem;">
                     <p style="font-size:0.8rem; font-weight:700; color:#4c1d95;
                                margin:0 0 0.5rem; letter-spacing:0.05em;">
-                        📚 LOADED ARTICLES
+                        📚 LOADED ARTICLES/ Source Key
                     </p>
                     <ul style="font-size:0.85rem; color:#5b21b6; list-style:none;
                                 padding:0; margin:0; line-height:1.8; white-space:normal; overflow-wrap:anywhere;">
-                        <li>Should You Switch Your Student Loans To The New Repayment Assistance Plan?</li>
-                        <li>These Student Loan Borrowers May Get Locked Out Of Key Repayment Plan Unless They Act Quickly</li>
-                        <li>How Will Your Student Loan Payment Change With the Repayment Assistance Plan (RAP)</li>
-                        <li>Education Department Sends Mass Warnings To Student Loan Borrowers To Change Repayment Plans, Or Else</li>
-                        <li>Student Loan Borrowers Will Have Two New Repayment Options Come July 1. Here's How to Pick One</li>
-                        <li>4 things student loan borrowers should do before July 1</li>
-                        <li>Beautiful Bill Act Updates</li>
-                        <li>Student Loan Repayments Are Being Overhauled. What Borrowers Should Know.</li>
-                        <li>Income-driven repayment plans are changing: What borrowers need to know in 2026</li>
-                        <li>Upcoming Changes to Income-Driven Repayment Plans</li>
-                        <li>Big Bill Means Big Changes For Student Loan Borrowers: What You Need to Know</li>
-                        <li>Federal Student Loan Repayment Plans</li>
-                        <li>Federal Student Loan Repayment Options</li>
-                        <li>One Big Beautiful Bill Act – Important Definitions</li>
+                        <li>1. Should You Switch Your Student Loans To The New Repayment Assistance Plan?</li>
+                        <li>2. These Student Loan Borrowers May Get Locked Out Of Key Repayment Plan Unless They Act Quickly</li>
+                        <li>3. How Will Your Student Loan Payment Change With the Repayment Assistance Plan (RAP)</li>
+                        <li>4. Education Department Sends Mass Warnings To Student Loan Borrowers To Change Repayment Plans, Or Else</li>
+                        <li>5. Student Loan Borrowers Will Have Two New Repayment Options Come July 1. Here's How to Pick One</li>
+                        <li>6. 4 things student loan borrowers should do before July 1</li>
+                        <li>7. Beautiful Bill Act Updates</li>
+                        <li>8. Student Loan Repayments Are Being Overhauled. What Borrowers Should Know.</li>
+                        <li>9. Income-driven repayment plans are changing: What borrowers need to know in 2026</li>
+                        <li>10. Upcoming Changes to Income-Driven Repayment Plans</li>
+                        <li>11. Big Bill Means Big Changes For Student Loan Borrowers: What You Need to Know</li>
+                        <li>12. Federal Student Loan Repayment Plans</li>
+                        <li>13. Federal Student Loan Repayment Options</li>
+                        <li>14. One Big Beautiful Bill Act – Important Definitions</li>
                     </ul>
                     <hr style="border:none; border-top:1px solid #ddd6fe; margin:0.75rem 0;">
                     <p style="font-size:0.75rem; color:#7c3aed; margin:0; line-height:1.5;">

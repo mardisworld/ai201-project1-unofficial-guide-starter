@@ -75,6 +75,8 @@ My response should:
         "Do not answer from memory or outside the provided excerpts. "
         "If the excerpts do not provide a complete answer, say that you could not find the answer in the provided excerpts. "
         "Ignore any excerpt that is not relevant to the question. "
+        "Do NOT put inline citations like '(Source 6)' or '(Source 1, Source 8)' inside the body of your answer. "
+        "Place all attribution only in the final Sources line. "
         "The final answer must end with a Sources line in this exact format: Sources: [Article A], [Article B].\n\n"
         + "\n\n".join(context_blocks)
         + f"\n\nQuestion: {query}"
@@ -158,7 +160,24 @@ def _normalize_source_line(answer, retrieved_chunks):
     return answer[: match.start()] + new_line
 
 
+def _strip_inline_source_labels(answer):
+    """Remove inline positional citations like "(Source 6)" or "(Source 1, Source 8)".
+
+    These are the ordinal labels we attach to each retrieved excerpt. They are
+    useful to the model while reasoning but confusing in the final answer, where
+    they don't visibly match the article-name Sources line. Attribution belongs
+    only in that final Sources line.
+    """
+    # A parenthetical that contains only "Source N" references (comma/"and"-separated).
+    pattern = r"\s*\(\s*Sources?\s+\d+(?:\s*(?:,|and)\s*Sources?\s+\d+)*\s*\)"
+    cleaned = re.sub(pattern, "", answer, flags=re.IGNORECASE)
+    # Tidy any space left before sentence punctuation.
+    cleaned = re.sub(r"\s+([.,;:])", r"\1", cleaned)
+    return cleaned
+
+
 def _ensure_sources(answer, retrieved_chunks):
+    answer = _strip_inline_source_labels(answer)
     if _answer_has_sources(answer):
         return _normalize_source_line(answer, retrieved_chunks)
 
