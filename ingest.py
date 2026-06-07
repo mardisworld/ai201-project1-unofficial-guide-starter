@@ -109,7 +109,7 @@ def _extract_pdf_sections(filepath):
 
 
 def load_documents():
-    """Load all .pdf and .txt student loan articles from the docs folder."""
+    """Load all .pdf student loan articles from the docs folder."""
     documents = []
     for filename in sorted(os.listdir(DOCS_PATH)):
         filepath = os.path.join(DOCS_PATH, filename)

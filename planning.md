@@ -136,11 +136,11 @@ Retrieved chunks:
      3. radar. Critics counter that $10 a month still matters to families already struggling to juggle rent, food, and childcare costs. If you’re used to a $0 bill, plan for $120 a year under RAP. Build an automatic transfer on payday or mark your calendar so a missed $10 doesn’t snowball into late fees and credit-score damage. And recertify your income every year. Falling even a few months behind could push your payment above the $10 floor. Deferment & forbearance: Why RAP is stricter than current rules SAVE offered struggling borrowers multiple off-ramps, including $0 payments for low-income borrowers and multi-year deferment and forbearance options. Under RAP, payments remain low by capping interest and charging just $10. Yet, it removes the long deferment windows that protect a borrower’s credit during prolonged hardship (though it does still allow administrative forbearance). For anyone with unstable income, those tighter limits make RAP significantly less
 According to Source 1, RAP could become more expensive over time because it has no cap or upper limits on how high the payments can get, unlike IBR and PAYE which cap monthly student loan payments at the amount equivalent to the 10-year Standard plan.
 
-Evaluation: Now the results missing part of answer (RAP is not indexed for inflation), and is now citing source 1 (the source my ansewr key has listed as correct). 
+Evaluation: Now the results missing part of answer (RAP is not indexed for inflation), and is now citing source 1 (the source my answer key has listed as correct). 
 
-Claude is suggesting that I improve the prompting, increase N_RESULTS to give the model more candidate evidence to combine, increase overlap, experiment with sentence/paragraph/section chunking, and use a stronger enbeddingn model but first I will commit here so that you can evaluate project before I make more changes.  
+Claude is suggesting that I improve the prompting, increase N_RESULTS to give the model more candidate evidence to combine, increase overlap, experiment with sentence/paragraph/section chunking, and use a stronger embedding model but first I will commit here so that you can evaluate project before I make more changes.  
 
-I have made several changes to improve the performmance of my responses. Let's see what we get back. 
+I have made several changes to improve the performance of my responses. Let's see what we get back. 
 
 Results for Strategy 3: Section Based Chunking + N_RESULTS - 7 + prompt changes + new embedding model 
 
@@ -198,10 +198,14 @@ Strategy 5: Updated prompt and system_prompt in generator.py again to ensure eac
 
 ![alt text](<better chatbot respoonse.png>)
 
-Evaluation: The chatbot is now providing the correct answer to my question, and citing each source. It is even citing sources that were not cited in the initial creation of the question generation, which was performed by Claude.ai. I am OK with this: the information contained in sources 3 and 5 also contain relevant information, although not as relevant as Sources 1 and 8. I am going to look at distance scores - they are all coming back at ~.5 or higher, even though the information in the chunks is clearly relevant to the answers.  
-
+Evaluation: The chatbot is now providing the correct answer to my question, and citing each source. It is even citing sources that were not cited in the initial creation of the question generation, which was performed by Claude.ai. I am OK with this: the information contained in sources 3 and 5 also contain relevant information, although not as relevant as Sources 1 and 8.
 ![alt text](sources.png)
 
+Strategy 5: App reverted to dropping 1 of 2 parts of answer, so Claude and I made updates to upgrade default model llama-3.1-8b-instant → llama-3.3-70b-versatile for reliable multi-chunk synthesis,  strengthened the prompt to enumerate every distinct factor, including lower-ranked excerpts, and to not stop at the first reason, and added _normalize_source_line() so the final Sources: line always shows real article names (mapping the model's Source N labels back to articles).
+
+Evaluation: Chatbot gives perfect response, with all required information included in expected answer and even exceeds what was expected. It also provides the two expected sources. I am happy with the result!
+
+![alt text](<perfect chatbot response .png>)
 ---
 
 ## Retrieval Approach
@@ -248,7 +252,7 @@ Using , I should get:
      -Stronger semantic similarity: Especially helpful when query-document matching needs more fine-grained meaning.
      -Still local-friendly: It can still be used with sentence-transformers locally, though it is heavier than all-MiniLM-L6-v2.
 
-Accordint to Claude:
+According to Claude:
 
 Why all-mpnet-base-v2 is better
 all-mpnet-base-v2 is generally a stronger embedding model than all-MiniLM-L6-v2 because:
@@ -379,9 +383,18 @@ Why all-mpnet-base-v2 is a better choice:
      with my specified chunk size and overlap" is a plan. -->
 
 **Milestone 3 — Ingestion and chunking:**
-I will use Claude to help me ingest the pdf documents using pdfplumber. 
-I'll give Claude my Chunking Strategy section and ask it to implement chunk_text()
+
+Ingestion: 
+I will use Claude to help me ingest the pdf documents using pdfplumber and ask it to implement run_ingestion() and load_documents() in ingest.py, and run_ingestion() in app.py.
+
+I'll give Claude my Chunking Strategy section and ask it to implement chunk_text() in ingest.py.
 
 **Milestone 4 — Embedding and retrieval:**
 
+I will use Claude to help me embed and store a list of chunks in the vector database in retriever.py. 
+
+I will use Claude to help me retrieve documents and implement retrieve(query, n_results=N_RESULTS) in retriever.py. 
+
 **Milestone 5 — Generation and interface:**
+
+I will use Claude to help me with the functionality of genration and interface in app.py, including functions _normalize_chat_history(chat_history):, chat(message, chat_history), and the Gradio UI.  
