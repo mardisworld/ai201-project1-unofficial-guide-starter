@@ -94,7 +94,12 @@ Attempt 2: 40 chunk overlap
 I am starting with 300-token chunks because this size is likely large enough to capture a complete idea from a typical article paragraph, while still keeping chunks small enough for precise retrieval.
 I am using 50-token overlap to preserve continuity across chunk boundaries, especially when a sentence or concept spans two chunks. Because my sources are mostly online news and explainers with overlapping content, I expect a sentence/paragraph/section strategy may ultimately be better, but I want to test the 300-token baseline first.
 
-Results:
+
+Question I am evaluating: Why could RAP become more expensive over time despite its low starting percentages? 
+Expected Answer: RAP has no payment cap (IBR and PAYE cap payments at the 10-year Standard amount), and it is not indexed for inflation — so a borrower whose pay merely keeps up with inflation can be bumped into higher tiers, with payments effectively rising over time. 
+Sources:  *(Sources 1, 8)*|                                                                          
+
+Results for Strategy 1:
 Strategy 1: 300 chunk/word and 50 chunk overlap strategy yielded 
 
 Returned 3 300 chunk excerpts and answered question partially correctly. 
@@ -113,7 +118,7 @@ A: According to Source 2, RAP is not indexed for inflation, so a borrower whose 
 
 Evaluation: missing part of answer (RAP has no payment cap (IBR and PAYE cap payments at the 10-year Standard amount), and is citing citation Source 2 instead of Source 1 and 8. The source is also in Source 1, apparently, so Claude missed that when generating test questions. My model isn't perfect. I want to try with a smaller chunking strategy, and then try out section based chunking. 
 
-Attempt 2 Results
+Results for Strategy 2
 Chunk_size(words) = 300
 Overlap = 40 
 
@@ -128,9 +133,50 @@ Retrieved chunks:
      3. radar. Critics counter that $10 a month still matters to families already struggling to juggle rent, food, and childcare costs. If you’re used to a $0 bill, plan for $120 a year under RAP. Build an automatic transfer on payday or mark your calendar so a missed $10 doesn’t snowball into late fees and credit-score damage. And recertify your income every year. Falling even a few months behind could push your payment above the $10 floor. Deferment & forbearance: Why RAP is stricter than current rules SAVE offered struggling borrowers multiple off-ramps, including $0 payments for low-income borrowers and multi-year deferment and forbearance options. Under RAP, payments remain low by capping interest and charging just $10. Yet, it removes the long deferment windows that protect a borrower’s credit during prolonged hardship (though it does still allow administrative forbearance). For anyone with unstable income, those tighter limits make RAP significantly less
 According to Source 1, RAP could become more expensive over time because it has no cap or upper limits on how high the payments can get, unlike IBR and PAYE which cap monthly student loan payments at the amount equivalent to the 10-year Standard plan.
 
-Evaluation: Now the resultws missing part of answer (RAP is not indexed for inflation), and is now citing source 1 (the source my ansewr key has listed as correct). 
+Evaluation: Now the results missing part of answer (RAP is not indexed for inflation), and is now citing source 1 (the source my ansewr key has listed as correct). 
 
 Claude is suggesting that I improve the prompting, increase N_RESULTS to give the model more candidate evidence to combine, increase overlap, experiment with sentence/paragraph/section chunking, and use a stronger enbeddingn model but first I will commit here so that you can evaluate project before I make more changes.  
+
+I have made several changes to improve the performmance of my responses. Let's see what we get back. 
+
+Results for Strategy 3:
+
+Retrieved chunks:
+
+1. 
+     8. Student Loan Repayments Are Being Overhauled (distance=0.5626, words=78)
+How does the new RAP plan work? The RAP plan is philosophically similar to previous income-driven repayment plans, like SAVE and government kicks in an additional $30, experts said. These features were crafted so a borrower’s balance won’t grow over time. But there’s a significant drawback that could make this plan more expensive over time: RAP is not indexed for inflation, so a borrower whose income merely kept pace with inflation could be bumped into higher payment tiers.
+
+2. 
+     11. Big Bill Means Big Changes For Student Loan Borrowers (distance=0.5863, words=70)
+The RAP plan is significantly more expensive for borrowers than the SAVE plan, but will also be more expensive than the other existing IDR plans for low- income borrowers. Unlike existing IDR plans that provide cancellation after 10-25 years, the RAP plan will only provide cancellation after 30 years of qualifying payments. The Big Bill specifies that the RAP plan should be available to borrowers beginning on July 1, 2026.
+
+3.
+     3. How Will Your Student Loan Payment Change With The Repayment Assistance Plan (distance=0.5895, words=63)
+RAP vs. SAVE: quick side-by-side SAVE was previously the most affordable income-driven plan for many borrowers because it disregards the first $35,000 of income (for a single filer) before calculating any payment, using a discretionary income calculation based on poverty guidelines. RAP doesn’t ignore any income, but its percentage of income starts low and rises gradually. The table shows how the math differs:
+
+4. 
+     5. Student Loan Borrowers Will Have Two New Repayment Options Come July 1 (distance=0.6197, words=66)
+RAP is an IDR plan, but it has several features that differ from the Education Department's other IDR options. Congress created the first IDR plans back in the 1990s to make student loan borrowers' bills more affordable. Historically, the plans cap people's monthly payments at a share of their discretionary income and cancel any remaining debt after a certain period, typically 20 years or 25 years.
+
+5. 
+     3. How Will Your Student Loan Payment Change With The Repayment Assistance Plan (distance=0.6281, words=101)
+Final thoughts RAP makes student-loan rules easier to explain but harder on many wallets: higher minimum payments, a longer journey to forgiveness, and stricter borrowing limits for graduate school. The interest-waiver feature remains, which is a significant win, but most SAVE users would still pay more each month and for a longer period. Use the time now to crunch your numbers, shore up your paperwork, and practice life with a slightly larger loan payment. If RAP never arrives, you’ll be ahead of your budget goals. If it does, you’ll meet the new rules on your own terms, not in a panic.
+
+6. 
+     1. Should You Switch Your Student Loans To The New Repayment Assistance Plan (distance=0.6569, words=115)
+point, payments under RAP could become much more expensive than IBR and other federal student loan repayment plan options as a borrower’s income increases over time. RAP will have other payment quirks that are arguably downsides. Unlike all other income- driven repayment plans, RAP will have a minimum required monthly payment of at least $10 per month. That may not sound like much, but even borrowers who can demonstrate that they have no income whatsoever will still have to pay at least $10 per month. Under existing income-driven repayment plans, including IBR, borrowers earning under 100% or 150% of the federal poverty limit based on their family size can have a $0 payment for up
+
+7. 
+     3. How Will Your Student Loan Payment Change With The Repayment Assistance Plan (distance=0.6569, words=89)
+Deferment & forbearance: Why RAP is stricter than current rules SAVE offered struggling borrowers multiple off-ramps, including $0 payments for low-income borrowers and multi-year deferment and forbearance options. Under RAP, payments remain low by capping interest and charging just $10. Yet, it removes the long deferment windows that protect a borrower’s credit during prolonged hardship (though it does still allow administrative forbearance). For anyone with unstable income, those tighter limits make RAP significantly less forgiving than today’s SAVE framework, and more borrowers may end up in delinquency and default.
+RAP could become more expensive over time because it is not indexed for inflation, so a borrower whose income merely kept pace with inflation could be bumped into higher payment tiers. (Source 1: 8. Student Loan Repayments Are Being Overhauled)
+
+Sources: [8. Student Loan Repayments Are Being Overhauled], [3. How Will Your Student Loan Payment Change With The Repayment Assistance Plan]
+
+Evaluation: Despite all of the changes that I've made, the Student Loan Advisor is still only returning one out of two correct answers to my question, and one out of two correct citations. 
+
+More tuning is needed to get the desired result. I will commit here so you can see my progress. 
 
 
 
