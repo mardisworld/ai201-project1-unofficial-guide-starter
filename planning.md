@@ -188,11 +188,19 @@ Results for strategy 4: All changes from Strategy 3 + N_RESULTS = 10 + strengthe
      -require a final Sources: [...] listing
 i    - included section headers in context blocks when available
 
-Finally, instead of getting a collection of chunks, I got the answer that inclluded the information I was looking for. 
+Finally, instead of getting a collection of chunks, I got the answer that included the information I was looking for. However, the app did not cite both of the sources I was looking for. I will make some more adjustment to ensure that all relevant information is cited in the sources. 
 
 Financial Aid Advisor: 
 
 ![alt text](good_chatbot_response.png)
+
+Strategy 5: Updated prompt and system_prompt in generator.py again to ensure each relevant citation is being returned. Also added fallback logic to ensure each relevant citation was being appended. 
+
+![alt text](<better chatbot respoonse.png>)
+
+Evaluation: The chatbot is now providing the correct answer to my question, and citing each source. It is even citing sources that were not cited in the initial creation of the question generation, which was performed by Claude.ai. I am OK with this: the information contained in sources 3 and 5 also contain relevant information, although not as relevant as Sources 1 and 8. I am going to look at distance scores - they are all coming back at ~.5 or higher, even though the information in the chunks is clearly relevant to the answers.  
+
+![alt text](sources.png)
 
 ---
 

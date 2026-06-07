@@ -1,4 +1,5 @@
 import os
+import re
 from groq import Groq
 from config import GROQ_API_KEY, LLM_MODEL
 
@@ -46,8 +47,12 @@ My response should:
         "Do not use any outside knowledge, prior experience, or assumptions. Treat the excerpts as the only source of truth. "
         "Only answer if the needed information is explicitly present in the excerpts. Do not infer, invent, or fill in missing details. "
         "If the excerpts do not contain enough information to answer, say: \"I could not find the answer in the provided excerpts.\" "
-        "Search all provided excerpts before answering. Do not stop after finding one relevant excerpt. If the answer requires information from multiple excerpts, combine them and cite each source used. "
-        "Do not cite a source unless it directly supports the answer. If you are not certain the answer is fully supported by the excerpts, say that the answer could not be determined from the provided excerpts. "
+        "Search all provided excerpts before answering. Do not stop after finding one relevant excerpt — keep reviewing every provided excerpt. "
+        "If the answer contains information from multiple excerpts, combine them and cite each article that supports any part of your answer. "
+        "List every article that contains evidence for any claim you make. Do not omit a relevant source simply because another source also supports the claim. "
+        "Do not cite a source unless it directly supports a claim in your answer. If you are not certain the answer is fully supported by the excerpts, say that the answer could not be determined from the provided excerpts. "
+        "The final answer must end with a Sources line in this exact format: Sources: [Article A], [Article B]. "
+        "Do not include any extra text after the Sources line. "
         "Do not invent answers, do not fill in missing details, and do not infer beyond the text. "
         "If the provided excerpts do not contain enough information to answer, say that you couldn't find the answer in the provided article excerpts."
     )
@@ -62,11 +67,12 @@ My response should:
     prompt = (
         "The following student loan article excerpts are available as context. Answer the question using only this information. "
         "Use the excerpts directly and cite the article name(s) you used. "
+        "List every article that provides evidence for any part of your answer. "
         "If the question asks for multiple reasons, list each reason separately and cite the supporting source(s). "
         "Do not answer from memory or outside the provided excerpts. "
         "If the excerpts do not provide a complete answer, say that you could not find the answer in the provided excerpts. "
         "Ignore any excerpt that is not relevant to the question. "
-        "At the end of your answer, list the article name(s) you used in the form:\nSources: [Article A], [Article B]\n\n"
+        "The final answer must end with a Sources line in this exact format: Sources: [Article A], [Article B].\n\n"
         + "\n\n".join(context_blocks)
         + f"\n\nQuestion: {query}"
     )
@@ -89,9 +95,37 @@ My response should:
         if not answer:
             return "The model returned an empty answer. Please try again."
 
-        return answer.strip()
+        return _ensure_sources(answer.strip(), retrieved_chunks)
     except Exception as exc:
         return _fallback_response(query, retrieved_chunks, error=exc)
+
+
+def _format_source_line(retrieved_chunks):
+    seen_articles = []
+    for chunk in retrieved_chunks:
+        article = chunk.get("student_loan_article")
+        if article and article not in seen_articles:
+            seen_articles.append(article)
+
+    if not seen_articles:
+        return ""
+
+    return "Sources: " + ", ".join(f"[{name}]" for name in seen_articles)
+
+
+def _answer_has_sources(answer):
+    return bool(re.search(r"\bSources?:\s*\[", answer, flags=re.IGNORECASE))
+
+
+def _ensure_sources(answer, retrieved_chunks):
+    if _answer_has_sources(answer):
+        return answer
+
+    sources_line = _format_source_line(retrieved_chunks)
+    if not sources_line:
+        return answer
+
+    return answer.strip() + "\n\n" + sources_line
 
 
 def _fallback_response(query, retrieved_chunks, error=None):
