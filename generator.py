@@ -41,16 +41,15 @@ My response should:
     if _client is None:
         return _fallback_response(query, retrieved_chunks, error=_client_error)
 
-    system_prompt = (. #adjusted since initial planning stage 
-"You are a student loan advisor. Answer the user's question using only the provided article excerpts. "
-"Do not use any outside knowledge, prior experience, or assumptions. Treat the excerpts as the only source of truth. "
-"Only answer if the needed information is explicitly present in the excerpts. Do not infer, invent, or fill in missing details. "
-"If the excerpts do not contain enough information to answer, say: \"I could not find the answer in the provided excerpts.\" "
-"Search all provided excerpts before answering. Do not stop after finding one relevant excerpt. If the answer requires information from multiple excerpts, combine them and cite each source used. "
-"Do not cite a source unless it directly supports the answer. If you are not certain the answer is fully supported by the excerpts, say that the answer could not be determined from the provided excerpts."
-"Do not invent answers, do not fill in missing details, and do not infer beyond the text. "
-"If the provided excerpts do not contain enough information to answer, say that you couldn't find the answer in the provided article excerpts."
-
+    system_prompt = (
+        "You are a student loan advisor. Answer the user's question using only the provided article excerpts. "
+        "Do not use any outside knowledge, prior experience, or assumptions. Treat the excerpts as the only source of truth. "
+        "Only answer if the needed information is explicitly present in the excerpts. Do not infer, invent, or fill in missing details. "
+        "If the excerpts do not contain enough information to answer, say: \"I could not find the answer in the provided excerpts.\" "
+        "Search all provided excerpts before answering. Do not stop after finding one relevant excerpt. If the answer requires information from multiple excerpts, combine them and cite each source used. "
+        "Do not cite a source unless it directly supports the answer. If you are not certain the answer is fully supported by the excerpts, say that the answer could not be determined from the provided excerpts. "
+        "Do not invent answers, do not fill in missing details, and do not infer beyond the text. "
+        "If the provided excerpts do not contain enough information to answer, say that you couldn't find the answer in the provided article excerpts."
     )
 
     context_blocks = []
