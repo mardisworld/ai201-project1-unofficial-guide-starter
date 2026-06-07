@@ -42,6 +42,7 @@ def embed_and_store(chunks):
             {
                 "student_loan_article": c["student_loan_article"],
                 "chunk_id": c["chunk_id"],
+                "section_header": c.get("section_header"),
             }
             for c in chunks
         ],
@@ -87,6 +88,7 @@ def retrieve(query, n_results=N_RESULTS):
         retrieved_chunks.append({
             "text": text,
             "student_loan_article": metadata.get("student_loan_article"),
+            "section_header": metadata.get("section_header"),
             "chunk_id": metadata.get("chunk_id"),
             "distance": distance,
         })

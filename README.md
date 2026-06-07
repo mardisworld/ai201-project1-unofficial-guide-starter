@@ -117,6 +117,8 @@ Local is good for offline use, control, and lower operational complexity.
 API-hosted models are easier to scale and often offer stronger, continuously updated embeddings.
 If cost wasn’t an issue and I wanted the best accuracy, I’d lean API-hosted for embeddings plus local chunking, but I’d still keep a local fallback if external service access is unreliable.
 
+EDIT: I switched to all-mpnet-base-v2 for stronger semantic relevance, especially on nuanced student loan policy text. I was not getting great results using all-MiniLM-L6-v2 . I was getting incomplete responses, sometimes with incorrect citations. 
+
 ---
 
 ## Grounded Generation

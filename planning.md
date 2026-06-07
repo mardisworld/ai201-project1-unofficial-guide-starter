@@ -171,10 +171,29 @@ Especially strong for English text and short-to-medium chunks like your article 
 
 This is also part of the recommended stack, so I feel good about my decision. 
 
+EDIT: To improve model responses, I am changing the embedding model to all-mpnet-base-v2. This is because I wasn't getting great results back using all-MiniLM-L6-v2 via sentence-transformers.  
+
+Using , I should get:
+
+     -Higher accuracy: It produces more semantically precise vectors, so retrieval tends to be better for nuanced queries.
+     -Better handling of complex text: It is more robust for domain-specific language like student loan policy and financial guidance.
+     -Stronger semantic similarity: Especially helpful when query-document matching needs more fine-grained meaning.
+     -Still local-friendly: It can still be used with sentence-transformers locally, though it is heavier than all-MiniLM-L6-v2.
+
+Accordint to Claude:
+
+Why all-mpnet-base-v2 is better
+all-mpnet-base-v2 is generally a stronger embedding model than all-MiniLM-L6-v2 because:
+
+     -Higher accuracy: It produces more semantically precise vectors, so retrieval tends to be better for nuanced queries.
+     -Better handling of complex text: It is more robust for domain-specific language like student loan policy and financial guidance.
+     -Stronger semantic similarity: Especially helpful when query-document matching needs more fine-grained meaning.
+     -Still local-friendly: It can still be used with sentence-transformers locally, though it is heavier than all-MiniLM-L6-v2.
+
 
 **Top-k:**
 
-Top-k = N_RESULTS = 3
+Top-k = N_RESULTS = 3/  updated to 7 to improve results 
 
 **Production tradeoff reflection:**
 
@@ -199,6 +218,13 @@ Avoid it when: you need high-precision retrieval, especially for rare domain ter
 If cost is not a constraint, a stronger model like all-mpnet-base-v2 or a premium API embedding will likely give better relevance
 If you need multilingual support or more robust comparison for longer chunks, this model is a weaker choice
 
+After getting incorrect results, I am changing the embedding model to all-MiniLM-L6-v2 via sentence-transformers.
+
+Why all-mpnet-base-v2 is a better choice:
+     -better semantic accuracy
+     -stronger for nuanced/legal/financial language
+     -more robust matching on questions that need fine-grained document relevance
+     -still usable locally with sentence-transformers
 ---
 
 ## Evaluation Plan

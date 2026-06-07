@@ -41,11 +41,13 @@ My response should:
     if _client is None:
         return _fallback_response(query, retrieved_chunks, error=_client_error)
 
-    system_prompt = (
+    system_prompt = (. #adjusted since initial planning stage 
 "You are a student loan advisor. Answer the user's question using only the provided article excerpts. "
 "Do not use any outside knowledge, prior experience, or assumptions. Treat the excerpts as the only source of truth. "
-"If the answer is contained in the provided text, answer directly using those facts and cite the article name(s) you used. "
-"If the excerpts mention both RAP and SAVE/IBR, compare them using only the details provided. "
+"Only answer if the needed information is explicitly present in the excerpts. Do not infer, invent, or fill in missing details. "
+"If the excerpts do not contain enough information to answer, say: \"I could not find the answer in the provided excerpts.\" "
+"Search all provided excerpts before answering. Do not stop after finding one relevant excerpt. If the answer requires information from multiple excerpts, combine them and cite each source used. "
+"Do not cite a source unless it directly supports the answer. If you are not certain the answer is fully supported by the excerpts, say that the answer could not be determined from the provided excerpts."
 "Do not invent answers, do not fill in missing details, and do not infer beyond the text. "
 "If the provided excerpts do not contain enough information to answer, say that you couldn't find the answer in the provided article excerpts."
 
@@ -58,8 +60,13 @@ My response should:
         )
 
     prompt = (
-        "The following student loan article excerpts are available as context. "
-        "Answer the question using only this information. Cite the article name(s) you used.\n\n"
+       
+        "The following student loan article excerpts are available as context. Answer the question using only this information. "
+        "Use the excerpts directly and cite the article name(s) you used. "
+        "If the answer is contained in more than one excerpt, combine information from each relevant excerpt. "
+        "If the excerpts do not provide a complete answer, say that you could not find the answer in the provided excerpts. "
+        "Ignore any excerpt that is not relevant to the question. "
+        "At the end of your answer, list the article name(s) you used in the form:\nSources: [Article A], [Article B]\n\n"
         + "\n\n".join(context_blocks)
         + f"\n\nQuestion: {query}"
     )
