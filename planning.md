@@ -269,6 +269,7 @@ If you need multilingual support or more robust comparison for longer chunks, th
      You can use ASCII art, a Mermaid diagram, or embed a sketch as an image.
      You'll use this diagram as context when prompting AI tools to implement each stage. -->
 
+![flow diagram(Student-Loan-Advisor-flow.png)
 ---
 
 ## AI Tool Plan
