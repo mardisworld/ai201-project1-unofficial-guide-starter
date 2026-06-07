@@ -71,10 +71,7 @@ def chat(message, history):
 # Gradio UI
 # ---------------------------------------------------------------------------
 
-with gr.Blocks(
-    theme=gr.themes.Soft(primary_hue="indigo"),
-    title="Student Loan Advisor",
-) as demo:
+with gr.Blocks() as demo:
 
     gr.HTML("""
         <div style="text-align:center; padding:1.25rem 0 0.5rem;">
@@ -91,10 +88,8 @@ with gr.Blocks(
         with gr.Column(scale=3):
             gr.ChatInterface(
                 fn=chat,
-                type="messages",
                 chatbot=gr.Chatbot(
                     height=440,
-                    type="messages",
                     placeholder=(
                         "<div style='text-align:center; color:#9ca3af; margin-top:3rem;'>"
                         "Ask a student loan question to get started — answers stay grounded in the documents."
@@ -155,4 +150,6 @@ if __name__ == "__main__":
     print("  Student Loan Advisor — starting up")
     print("="*50 + "\n")
     run_ingestion()
-    demo.launch()
+    demo.launch(
+        theme=gr.themes.Soft(primary_hue="indigo"),
+    )

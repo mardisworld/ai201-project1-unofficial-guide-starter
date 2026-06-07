@@ -90,14 +90,17 @@ I will start with a 50 token overlapping strategy. We learned from the Tinker la
 
 Attempt 2: 40 chunk overlap
 
-**Reasoning:**
-I am starting with 300-token chunks because this size is likely large enough to capture a complete idea from a typical article paragraph, while still keeping chunks small enough for precise retrieval.
-I am using 50-token overlap to preserve continuity across chunk boundaries, especially when a sentence or concept spans two chunks. Because my sources are mostly online news and explainers with overlapping content, I expect a sentence/paragraph/section strategy may ultimately be better, but I want to test the 300-token baseline first.
+Attempt 3: Section based chunking
 
-
+**Experimentation of Chunking Strategy**
 Question I am evaluating: Why could RAP become more expensive over time despite its low starting percentages? 
 Expected Answer: RAP has no payment cap (IBR and PAYE cap payments at the 10-year Standard amount), and it is not indexed for inflation — so a borrower whose pay merely keeps up with inflation can be bumped into higher tiers, with payments effectively rising over time. 
 Sources:  *(Sources 1, 8)*|                                                                          
+
+
+**Reasoning:**
+I am starting with 300-token chunks because this size is likely large enough to capture a complete idea from a typical article paragraph, while still keeping chunks small enough for precise retrieval.
+I am using 50-token overlap to preserve continuity across chunk boundaries, especially when a sentence or concept spans two chunks. Because my sources are mostly online news and explainers with overlapping content, I expect a sentence/paragraph/section strategy may ultimately be better, but I want to test the 300-token baseline first.
 
 Results for Strategy 1:
 Strategy 1: 300 chunk/word and 50 chunk overlap strategy yielded 
@@ -139,7 +142,7 @@ Claude is suggesting that I improve the prompting, increase N_RESULTS to give th
 
 I have made several changes to improve the performmance of my responses. Let's see what we get back. 
 
-Results for Strategy 3:
+Results for Strategy 3: Section Based Chunking + N_RESULTS - 7 + prompt changes + new embedding model 
 
 Retrieved chunks:
 
@@ -178,7 +181,18 @@ Evaluation: Despite all of the changes that I've made, the Student Loan Advisor 
 
 More tuning is needed to get the desired result. I will commit here so you can see my progress. 
 
+Results for strategy 4: All changes from Strategy 3 + N_RESULTS = 10 + strengthening the prompt to: 
 
+     -explicitly require using only provided excerpts
+     -ask for separate reasons when the question requests them
+     -require a final Sources: [...] listing
+i    - included section headers in context blocks when available
+
+Finally, instead of getting a collection of chunks, I got the answer that inclluded the information I was looking for. 
+
+Financial Aid Advisor: 
+
+![alt text](good_chatbot_response.png)
 
 ---
 

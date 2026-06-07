@@ -54,15 +54,16 @@ My response should:
 
     context_blocks = []
     for index, chunk in enumerate(retrieved_chunks, start=1):
+        section_label = f" (Section: {chunk['section_header']})" if chunk.get("section_header") else ""
         context_blocks.append(
-            f"Source {index}: {chunk['student_loan_article']}\n{chunk['text']}"
+            f"Source {index}: {chunk['student_loan_article']}{section_label}\n{chunk['text']}"
         )
 
     prompt = (
-       
         "The following student loan article excerpts are available as context. Answer the question using only this information. "
         "Use the excerpts directly and cite the article name(s) you used. "
-        "If the answer is contained in more than one excerpt, combine information from each relevant excerpt. "
+        "If the question asks for multiple reasons, list each reason separately and cite the supporting source(s). "
+        "Do not answer from memory or outside the provided excerpts. "
         "If the excerpts do not provide a complete answer, say that you could not find the answer in the provided excerpts. "
         "Ignore any excerpt that is not relevant to the question. "
         "At the end of your answer, list the article name(s) you used in the form:\nSources: [Article A], [Article B]\n\n"

@@ -36,16 +36,19 @@ def embed_and_store(chunks):
     You don't generate embeddings manually here — you hand over the text
     and ChromaDB handles the vector math.
     """
+    metadatas = []
+    for c in chunks:
+        metadata = {
+            "student_loan_article": c["student_loan_article"],
+            "chunk_id": c["chunk_id"],
+        }
+        if c.get("section_header") is not None:
+            metadata["section_header"] = c["section_header"]
+        metadatas.append(metadata)
+
     _collection.add(
         documents=[c["text"] for c in chunks],
-        metadatas=[
-            {
-                "student_loan_article": c["student_loan_article"],
-                "chunk_id": c["chunk_id"],
-                "section_header": c.get("section_header"),
-            }
-            for c in chunks
-        ],
+        metadatas=metadatas,
         ids=[c["chunk_id"] for c in chunks],
     )
     print(f"Stored {_collection.count()} total chunks in the vector database.")

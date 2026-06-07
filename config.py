@@ -15,7 +15,7 @@ CHROMA_COLLECTION = "rulesbot"
 CHROMA_PATH = "./chroma_db"
 
 # --- Retrieval ---
-N_RESULTS = 7 # adjusting to improve performance of gernating answers with limited context window. 
+N_RESULTS = 10 # increase retrieval depth so the model has more candidate evidence to combine.
 
 # --- Documents ---
 DOCS_PATH = "./documents"
