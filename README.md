@@ -193,7 +193,7 @@ Eventually, after experimenting extensively with the chunkking strategy and stil
 The test for every sentence you write: could it have come from anywhere other than the provided rule text? If yes, delete it.
 
 **This was updated in generator.py to the following:**
-  ``` system_prompt = (
+ system_prompt = (
         "You are a student loan advisor. Answer the user's question using only the provided article excerpts. "
         "Do not use any outside knowledge, prior experience, or assumptions. Treat the excerpts as the only source of truth. "
         "Only answer if the needed information is explicitly present in the excerpts. Do not infer, invent, or fill in missing details. "
@@ -211,15 +211,15 @@ The test for every sentence you write: could it have come from anywhere other th
         "If the provided excerpts do not contain enough information to answer, say that you couldn't find the answer in the provided article excerpts."
 
 
-    ) ```
+    ) 
 
 **How source attribution is surfaced in the response:**
 
 article NAME shown after each 'Source N:' label — never write the literal 'Source N' label in the Sources line.
 
-```
-Sources: [8. Student Loan Repayments Are Being Overhauled], [1. Should You Switch Your Student Loans To The New Repayment Assistance Plan]
-```
+
+**Sources:** [8. Student Loan Repayments Are Being Overhauled], [1. Should You Switch Your Student Loans To The New Repayment Assistance Plan]
+
 
 ---
 
