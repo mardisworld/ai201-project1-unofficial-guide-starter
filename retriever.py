@@ -54,7 +54,7 @@ def embed_and_store(chunks):
     print(f"Stored {_collection.count()} total chunks in the vector database.")
 
 
-def retrieve(query, n_results=N_RESULTS):
+def retrieve(query, n_results=N_RESULTS, where=None):
     """
     Find the most relevant student loan article chunks for a user's question.
 
@@ -76,11 +76,17 @@ def retrieve(query, n_results=N_RESULTS):
     if _collection.count() == 0:
         return []
 
-    results = _collection.query(
-        query_texts=[query],
-        n_results=n_results,
-        include=["documents", "metadatas", "distances"],
-    )
+    query_kwargs = {
+        "query_texts": [query],
+        "n_results": n_results,
+        "include": ["documents", "metadatas", "distances"],
+    }
+    # Optional metadata filter (e.g. {"student_loan_article": "8. ..."}).
+    # When omitted, behavior is identical to before.
+    if where:
+        query_kwargs["where"] = where
+
+    results = _collection.query(**query_kwargs)
 
     documents = results["documents"][0]
     metadatas = results["metadatas"][0]

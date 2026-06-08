@@ -353,13 +353,43 @@ i    - included section headers in context blocks when available
 
 ## Hybrid Search
 
+The app offers an optional **hybrid retrieval** strategy that the user selects in the UI ("Retrieval strategy" radio: *Original (semantic)* vs *Hybrid (semantic + BM25)*). The original semantic pipeline is left exactly as it was — the hybrid path is implemented as a separate, optionally-called module (`hybrid_retriever.py`) so the default behavior is unchanged.
+
+**How it works.** Hybrid search combines two retrievers over the same chunk corpus:
+1. **Dense / semantic** — reuses the existing `retrieve()` (all-mpnet-base-v2 embeddings, cosine distance) unchanged.
+2. **Keyword / BM25** — a `rank_bm25` index built lazily over the stored chunk texts. BM25 rewards exact-term matches (plan names, acronyms like "ICR"/"PAYE", dollar amounts) that dense embeddings sometimes rank low.
+
+The two rankings are merged with **Reciprocal Rank Fusion (RRF)**: each chunk's score is the sum over both rankers of `1 / (k + rank)` (with `k = 60`). A chunk that either retriever ranks highly can surface, which is the point — it covers cases where meaning-based search and term-based search disagree. The **Retrieval debug** panel shows the fused `rrf` score plus each chunk's dense and BM25 rank, so the contribution of each retriever is visible.
+
+**Why I added it.** During the Failure Case Analysis I found a question ("What must a Parent PLUS borrower do…") where the fact-bearing chunk ranked ~184/334 under pure semantic search because it never restated its subject. Hybrid search is the kind of fix that analysis pointed to: BM25 lifted a keyword-relevant chunk from dense rank ~20 to rank 8 in the fused results. Honest caveat — hybrid improves keyword recall in general, but it did **not** fully resolve that specific question (the clearest source chunk still didn't reach the top-10), so I offer it as a selectable strategy and a general improvement rather than a guaranteed fix.
+
+**Files:** `hybrid_retriever.py` (new), wired into `app.py`'s strategy selector; `rank-bm25` added to `requirements.txt`.
+
 ## Chunking Strategy Comparison  
 
-I did this while completing the project. My approach to project was an experimental one, where I just kept iterating on chunking strategy along with other improvements until I got the answer that I was looking for. I didn't read the part that I shouldn't try the stretch features until I completed all of the required features, so that is on me. 
+I did this while completing the project. My approach to project was an experimental one, where I just kept iterating on chunking strategy along with other improvements until I got the answer that I was looking for. This is documented extensively in the planning.md file. I didn't read the part that I shouldn't try the stretch features until I completed all of the required features, so that is on me. 
+
+The table below summarizes all 7 attempts and their effect on my primary evaluation question — *"Why could RAP become more expensive over time despite its low starting percentages?"* (expected answer has **two** factors: no payment cap **and** not indexed for inflation). Full per-attempt detail is in planning.md.
+
+| Attempt | Chunking | Other key changes | Chunks | Outcome |
+|---|---|---|---|---|
+| 1 | Fixed 300-word, 50 overlap | MiniLM, N_RESULTS=3 | 123 | RAP: **partial** — returned "not indexed for inflation", missed "no payment cap" |
+| 2 | Fixed 150-word, 40 overlap | MiniLM, N_RESULTS=3 | not recorded | RAP: **partial (flipped)** — returned "no cap", missed "not indexed for inflation" |
+| 3 | Section-based (bold headers) | mpnet embeddings, N_RESULTS=7, prompt changes | 334 | RAP: both factors **retrieved**, but generation returned/cited only one |
+| 4 | Section-based (unchanged) | N_RESULTS=10, stronger prompt | 334 | RAP: both factors in the answer; did not yet cite both sources |
+| 5 | Section-based (unchanged) | prompt + system_prompt + fallback citation logic | 334 | RAP: correct answer with both factors + sources |
+| 6 | Section-based (unchanged) | LLM 8B→70B, prompt, `_normalize_source_line()` | 334 | RAP: **reliably correct** (both factors + both sources) after a regression |
+| 7 | Section-based (unchanged) | investigated a second question | 334 | Parent PLUS question: missing "one ICR payment" step — diagnosed as a retrieval/chunking limit; title-prefix & overlap tested but insufficient (see Failure Case Analysis) |
+
+**Honest caveat:** this is not a clean isolation of chunking alone — across attempts I also changed the embedding model (all-MiniLM-L6-v2 → all-mpnet-base-v2), `N_RESULTS` (3 → 7 → 10), the prompt, and eventually the LLM (8B → 70B). The clearest *chunking-specific* finding is the jump from Attempts 1–2 to 3: fixed-size windows split the two RAP factors across chunk boundaries so only one was retrieved at a time, whereas **section-based chunking** kept related material together and got both factors into the retrieved set. From Attempt 3 onward the chunking was fixed (334 chunks) and the remaining fixes were generation-side — except Attempt 7, which surfaced a *different* question where even section-based chunking left the key fact unretrievable (the documented failure case).
 
 ## Metadata Filtering 
 
 This was also done while completing the project. As I kept iterating, I eventually ended up with a source based chunking strategy were source was an attribute on the chunks that are returned. As currently implemented, the user will not see the chunks with the source attribute if they ask a question that the Student Loan Advisor can ansewr. If the chatbot does not know the answer, it will return the chunks with thier source attribute. This can be seen on lines 61 - 107 in the Sample Chunks section above. 
+
+**Query-time metadata filtering.** Beyond attaching source metadata to each chunk, the app now lets the user *filter retrieval* by that metadata. A "Limit to article (metadata filter)" dropdown in the UI lists every loaded article plus an "All articles" default. When a specific article is chosen, the selection is passed into retrieval as a ChromaDB `where={"student_loan_article": <article>}` filter, so only chunks from that source are considered — useful for asking "what does *this* source say about X?" The filter works with both retrieval strategies: the semantic path passes `where` straight to `_collection.query()`, and the hybrid path applies the same filter to both its dense and BM25 halves. The active filter is shown in the Retrieval debug panel. The original retriever stays backward-compatible — the `where` parameter defaults to `None`, so unfiltered behavior is unchanged.
+
+**Files:** `retriever.py` (`retrieve()` gained an optional `where` argument), `hybrid_retriever.py` (filters both halves), and `app.py` (the dropdown + `where` construction).
 
  ## Conversational Memory 
 

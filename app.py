@@ -1,4 +1,8 @@
+import os
+import re
+
 import gradio as gr
+from config import DOCS_PATH
 from ingest import load_documents, chunk_document
 from retriever import embed_and_store, retrieve, get_collection
 from generator import generate_response, contextualize_query
@@ -63,7 +67,59 @@ def _normalize_chat_history(chat_history):
     return normalized
 
 
-def chat(message, chat_history):
+ORIGINAL_STRATEGY = "Original (semantic)"
+HYBRID_STRATEGY = "Hybrid (semantic + BM25)"
+ALL_ARTICLES = "All articles"
+
+
+def _article_sort_key(name):
+    leading = re.match(r"\s*(\d+)", name or "")
+    return (int(leading.group(1)) if leading else 9999, name or "")
+
+
+def _available_articles():
+    """Distinct article names for the metadata-filter dropdown, numerically sorted."""
+    try:
+        data = get_collection().get(include=["metadatas"])
+        articles = {
+            m.get("student_loan_article")
+            for m in data["metadatas"]
+            if m.get("student_loan_article")
+        }
+        if articles:
+            return sorted(articles, key=_article_sort_key)
+    except Exception:
+        pass
+
+    # Fallback (e.g. collection not yet built): derive from the documents folder.
+    try:
+        articles = [
+            os.path.splitext(fn)[0].replace("_", " ").title()
+            for fn in os.listdir(DOCS_PATH)
+            if fn.lower().endswith(".pdf")
+        ]
+        return sorted(articles, key=_article_sort_key)
+    except Exception:
+        return []
+
+
+def _chunk_metrics(chunk):
+    """Format the per-chunk scores for the debug panel, depending on strategy."""
+    if chunk.get("rrf_score") is not None:
+        dense = chunk.get("dense_rank")
+        bm25 = chunk.get("bm25_rank")
+        return (
+            f"rrf={chunk['rrf_score']:.4f}, "
+            f"dense_rank={dense if dense is not None else '-'}, "
+            f"bm25_rank={bm25 if bm25 is not None else '-'}"
+        )
+    distance = chunk.get("distance")
+    similarity = chunk.get("similarity", 0.0) or 0.0
+    distance_str = f"{distance:.4f}" if distance is not None else "n/a"
+    return f"score={similarity:.4f}, distance={distance_str}"
+
+
+def chat(message, chat_history=None, strategy=ORIGINAL_STRATEGY, article_filter=ALL_ARTICLES):
     if not message.strip():
         return chat_history or [], "", ""
 
@@ -72,10 +128,24 @@ def chat(message, chat_history):
     # Conversational memory: rewrite a follow-up into a standalone query using
     # the conversation, then retrieve on that, then generate with the history.
     search_query = contextualize_query(message, chat_history)
-    retrieved = retrieve(search_query)
+
+    # Metadata filtering: optionally restrict retrieval to a single article.
+    where = None
+    if article_filter and article_filter != ALL_ARTICLES:
+        where = {"student_loan_article": article_filter}
+
+    # Retrieval strategy is chosen in the UI. The original semantic path is
+    # untouched; the hybrid path is an optional, separately-implemented module.
+    if strategy == HYBRID_STRATEGY:
+        from hybrid_retriever import hybrid_retrieve
+        retrieved = hybrid_retrieve(search_query, where=where)
+    else:
+        retrieved = retrieve(search_query, where=where)
+
     answer = generate_response(message, retrieved, chat_history=chat_history)
 
-    debug_text = ""
+    debug_text = f"Strategy: {strategy}\n"
+    debug_text += f"Filter: {article_filter}\n\n"
     if search_query.strip() != message.strip():
         debug_text += f"Rewritten query (used for retrieval):\n  {search_query}\n\n"
 
@@ -84,7 +154,7 @@ def chat(message, chat_history):
         for index, chunk in enumerate(retrieved, start=1):
             snippet = chunk["text"].replace("\n", " ").strip()
             chunk_debug.append(
-                f"{index}. {chunk['student_loan_article']} (score={chunk.get('similarity', 0.0):.4f}, distance={chunk['distance']:.4f}, words={len(snippet.split())})\n"
+                f"{index}. {chunk['student_loan_article']} ({_chunk_metrics(chunk)}, words={len(snippet.split())})\n"
                 f"   {snippet}"
             )
         debug_text += "Retrieved chunks:\n" + "\n\n".join(chunk_debug)
@@ -154,6 +224,18 @@ with gr.Blocks() as demo:
             """)
 
         with gr.Column(scale=3):
+            strategy_radio = gr.Radio(
+                choices=[ORIGINAL_STRATEGY, HYBRID_STRATEGY],
+                value=ORIGINAL_STRATEGY,
+                label="Retrieval strategy",
+                info="Original = semantic search only. Hybrid = semantic + BM25 keyword search (Reciprocal Rank Fusion).",
+            )
+            article_dropdown = gr.Dropdown(
+                choices=[ALL_ARTICLES] + _available_articles(),
+                value=ALL_ARTICLES,
+                label="Limit to article (metadata filter)",
+                info="Restrict retrieval to one source document, or search all.",
+            )
             chatbot = gr.Chatbot(
                 height=440,
                 label="Advisor Chat",
@@ -166,6 +248,8 @@ with gr.Blocks() as demo:
                 container=False,
                 scale=7,
             )
+            # Clicking an example fills the textbox; the user then submits, so the
+            # currently-selected retrieval strategy (and conversation) is respected.
             examples = gr.Examples(
                 examples=[
                     "Why could RAP become more expensive over time despite its low starting percentages?",
@@ -175,11 +259,12 @@ with gr.Blocks() as demo:
                     "What risk does consolidating loans pose to forgiveness progress?",
                 ],
                 inputs=textbox,
-                outputs=[chatbot, textbox, debug_box],
-                fn=chat,
-                cache_examples=False,
             )
-            textbox.submit(chat, [textbox, chatbot], [chatbot, textbox, debug_box])
+            textbox.submit(
+                chat,
+                [textbox, chatbot, strategy_radio, article_dropdown],
+                [chatbot, textbox, debug_box],
+            )
 
 
 if __name__ == "__main__":
