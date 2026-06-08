@@ -43,7 +43,7 @@ Starting July 1, 2026, the One Big Beautiful Bill Act brings sweeping changes to
 I am going to experiment with this. I will first try a chunking strategy of 300 tokens (words). If this doesn't give good results, I will experiment with chunking by sentences or paragraphs. 
 I will document the results of my experimentation here. 
 
-First attempt: 
+**First attempt:**
 
 **Overlap:**
 
@@ -56,7 +56,7 @@ Since I don't really have a good feel for implementing a chunking strategy (only
 **Final chunk count:**
 The original strategy of 300 tokens returned 123 chunks. 
 
-I experimented with this extensively until I was satisfied with Chatbot's perfect retrieval. This is documented in planning.md: please read for details. 
+I experimented with this extensively until I was satisfied with Chatbot's near perfect retrieval. This is documented in planning.md: please read for details. 
 
 ---
 
@@ -70,10 +70,9 @@ I experimented with this extensively until I was satisfied with Chatbot's perfec
 
 **Model used:**
 
-Embedding model used
+Initially, I ued embedding model used: all-MiniLM-L6-v2.
 
-all-MiniLM-L6-v2
-Why I chose it
+**Why I chose it**
 
 It is a lightweight sentence-transformer embedding model that works well for semantic search.
 It is fast and easy to run locally, which fits this repo’s Chroma + sentence-transformers setup.
@@ -112,7 +111,7 @@ Local is good for offline use, control, and lower operational complexity.
 API-hosted models are easier to scale and often offer stronger, continuously updated embeddings.
 If cost wasn’t an issue and I wanted the best accuracy, I’d lean API-hosted for embeddings plus local chunking, but I’d still keep a local fallback if external service access is unreliable.
 
-EDIT: I switched to all-mpnet-base-v2 for stronger semantic relevance, especially on nuanced student loan policy text. I was not getting great results using all-MiniLM-L6-v2 . I was getting incomplete responses, sometimes with incorrect citations. The newer model improved the Chatbot's performance. 
+Eventually, after experimenting extensively with the chunkking strategy and still not getting the results I wanted, I switched to all-mpnet-base-v2. This provided stronger semantic relevance, especially on nuanced student loan policy text. I was not getting great results using all-MiniLM-L6-v2 . I was getting incomplete responses, sometimes with incorrect citations. The newer model improved the Chatbot's performance. 
 
 ---
 
@@ -137,7 +136,7 @@ EDIT: I switched to all-mpnet-base-v2 for stronger semantic relevance, especiall
 
 The test for every sentence you write: could it have come from anywhere other than the provided rule text? If yes, delete it.
 
-This was updated in generator.py to the following:
+**This was updated in generator.py to the following:**
   system_prompt = (
         "You are a student loan advisor. Answer the user's question using only the provided article excerpts. "
         "Do not use any outside knowledge, prior experience, or assumptions. Treat the excerpts as the only source of truth. "
@@ -154,6 +153,8 @@ This was updated in generator.py to the following:
         "Do not include any extra text after the Sources line. "
         "Do not invent answers, do not fill in missing details, and do not infer beyond the text. "
         "If the provided excerpts do not contain enough information to answer, say that you couldn't find the answer in the provided article excerpts."
+
+
     )
 
 **How source attribution is surfaced in the response:**
@@ -246,7 +247,7 @@ I tested two targeted fixes and measured their effect on this chunk's rank, rath
 - **Prepending the article title + section header to each chunk's embedded text** moved it only from rank ~184 → ~133 (distance 0.64 → 0.58) — still well outside the top-10. The article title ("Student Loan Repayments Are Being Overhauled") is too generic to add the "Parent PLUS" signal the query needs.
 - **Cross-section overlap** (carrying the neighboring "Parent PLUS" chunk's text into this one) moved it only 0.64 → 0.62 — also insufficient.
 
-Neither closes the gap because the fact-bearing sentence is genuinely semantically distant from the "Parent PLUS" framing — it discusses the generic ICR→IBR transition without naming the subject. Approaches more likely to actually fix it: (a) a query-aware or hybrid retrieval step (e.g. keyword/BM25 hybrid, or query expansion that adds "consolidate / ICR / IBR" terms) so lexically-relevant chunks surface even when dense similarity is low; (b) a light re-ingestion preprocessing pass that resolves pronouns/subjects so each chunk restates *who* it is about; or (c) a re-ranking stage over a wider candidate pool. Given the cost/complexity of those, I am documenting this as a known limitation rather than over-fitting the pipeline to one question.
+Neither closes the gap because the fact-bearing sentence is genuinely semantically distant from the "Parent PLUS" framing — it discusses the generic ICR→IBR transition without naming the subject. Approaches more likely to actually fix it: (a) a query-aware or hybrid retrieval step (e.g. keyword/BM25 hybrid, or query expansion that adds "consolidate / ICR / IBR" terms) so lexically-relevant chunks surface even when dense similarity is low; (b) a light re-ingestion preprocessing pass that resolves pronouns/subjects so each chunk restates *who* it is about; or (c) a re-ranking stage over a wider candidate pool. Given the cost/complexity of those, I am documenting this as a known limitation rather than over-fitting the pipeline to one question, which would be beyond the scope of this assignment. 
 
 ---
 
@@ -257,11 +258,11 @@ Neither closes the gap because the fact-bearing sentence is genuinely semantical
 
 **One way the spec helped you during implementation:**
 
-It was a good starting point, but given that I experimented with chunking strategies until I had perfected my output, and I had to change my embedding model and my LLM, the specs were not as helpful as I might have hoped. 
+It was a good starting point, but given that I experimented with chunking strategies extensively before it gave me desired results, that I had to change my embedding model, and that I also had to change my LLM, the specs were not as helpful as I might have hoped. 
 
 **One way your implementation diverged from the spec, and why:**
 
-Chunking strategy, embedding model, system prompting, and LLM all requuired changes to give perfect results. 
+Chunking strategy, embedding model, system prompting, and LLM were all requuired changes to give near perfect results. 
 
 ---
 
@@ -278,15 +279,13 @@ Chunking strategy, embedding model, system prompting, and LLM all requuired chan
 
 **Instance 1**
 
-- *What I gave the AI: Results from chunking strategy 2 (140 chunks, 40 chunnk overlap)
+- *What I gave the AI:* Results from chunking strategy 2 (140 chunks, 40 chunnk overlap)
 - *What it produced:* Claude suggested that I suggesting that I improve the prompting, increase N_RESULTS to give the model more candidate evidence to combine, increase overlap, experiment with sentence/paragraph/section chunking, and use a stronger embedding mode.
 - *What I changed or overrode:* I implemented Claude's suggested changes. 
 
-Claude is suggesting that I improve the prompting, increase N_RESULTS to give the model more candidate evidence to combine, increase overlap, experiment with sentence/paragraph/section chunking, and use a stronger embedding model but first I will commit here so that you can evaluate project before I make more changes. 
-
 **Instance 2**
 
-- *What I gave the AI:* Results from Strategy 3- Section Based Chunking + N_RESULTS - 7 + prompt changes + new embedding model. Despite drastic overhaul, the Student Loan Advisor still only returned one out of two correct answers to my question, and one out of two correct citations.  
+- *What I gave the AI:* Results from Strategy 3- Section Based Chunking + N_RESULTS -=7 + prompt changes + new embedding model. Despite drastic overhaul, the Student Loan Advisor still only returned one out of two correct answers to my question, and one out of two correct citations.  
 - *What it produced:* Claude suggested increasing N_RESULTS to 10 and strengthening the prompt to N_RESULTS = 10 + strengthening the prompt to: 
      - explicitly require using only provided excerpts
      - ask for separate reasons when the question requests them

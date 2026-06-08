@@ -1,9 +1,4 @@
-# Project 1 Planning: The Unofficial Guide
-
-> Write this document before you write any pipeline code.
-> Your spec and architecture diagram are what you'll use to direct AI tools (Claude, Copilot, etc.) to generate your implementation — the more specific they are, the more useful the generated code will be.
-> Update the Retrieval Approach and Chunking Strategy sections if you change your approach during implementation.
-> Update this file before starting any stretch features.
+# Student Loan Advisor Planning Documentation
 
 ---
 
@@ -80,35 +75,35 @@ Returns an empty list `[]` if the input text is empty or produces no valid chunk
 
 **Chunk size:**
 
-I will experiment with this. I will first try a 300 token (word) strategy, but based on what I learned from the RulesBot Tinker, I will probably switch to using a sentence, paragraph, or section strategy. I will record my experimentation here. 
+I will experiment with this. I will first try a 300 token (word) strategy, but based on what I learned from the RulesBot Tinker, I will probably switch to using a sentence, paragraph, or section strategy. I will record  the results of my experimentation here. 
 
-Attempt 2: 150 chunk strategy
+**Attempt 1: ** 300 chunk/word strategy, 50 chunk/word overlap
 
-**Overlap:**
+**Attempt 2: ** 150 chunk strategy, 40 chunk/word overlap
 
-I will start with a 50 token overlapping strategy. We learned from the Tinker lab that "Overlap reduces the effective size of each chunk by distributing boundary content across neighbors, which keeps individual embeddings more focused and semantically precise.", so I will try to use it at first. I found from the Tinker lab that I got my best results from using a section strategy, so this might not be needed.   
+**Attempt 3: ** Section Based Chunking + N_RESULTS - 7 + prompt changes + new embedding model
 
+**Attempt 4: ** All changes from Strategy 3 + N_RESULTS = 10 + strengthening the prompt
 
-Attempt 2: 40 chunk overlap
+**Attempt 5: **  Updated prompt and system_prompt in generator.py again to ensure each relevant citation is being returned. Also added fallback logic to ensure each relevant citation was being appended. 
 
-Attempt 3: Section based chunking
+**Attempt 6: **  Upgraded default model llama-3.1-8b-instant → llama-3.3-70b-versatile for reliable multi-chunk synthesis,  strengthened the prompt to enumerate every distinct factor, including lower-ranked excerpts, and to not stop at the first reason, and added _normalize_source_line() so the final Sources: line always shows real article names (mapping the model's Source N labels back to articles).
+
+** Attempt 7: **  Investigated a second test question that omitted part of its expected answer — "What must a Parent PLUS borrower do to keep access to an income-driven plan, and which plan can they get?" Expected the answer to include the step "make at least one payment under ICR" before the 2028 phase-out, but the chatbot left it out.
 
 **Experimentation of Chunking Strategy**
 Question I am evaluating: Why could RAP become more expensive over time despite its low starting percentages? 
 Expected Answer: RAP has no payment cap (IBR and PAYE cap payments at the 10-year Standard amount), and it is not indexed for inflation — so a borrower whose pay merely keeps up with inflation can be bumped into higher tiers, with payments effectively rising over time. 
 Sources:  *(Sources 1, 8)*|                                                                          
 
-
 **Reasoning:**
-I am starting with 300-token chunks because this size is likely large enough to capture a complete idea from a typical article paragraph, while still keeping chunks small enough for precise retrieval.
-I am using 50-token overlap to preserve continuity across chunk boundaries, especially when a sentence or concept spans two chunks. Because my sources are mostly online news and explainers with overlapping content, I expect a sentence/paragraph/section strategy may ultimately be better, but I want to test the 300-token baseline first.
+Because my experience with chunking strategies is limited, I am going to take an experimental approach and record my results in this document. I am starting with 300-token chunks because this size is likely large enough to capture a complete idea from a typical article paragraph, while still keeping chunks small enough for precise retrieval. I am using 50-token overlap to preserve continuity across chunk boundaries, especially when a sentence or concept spans two chunks. Because my sources are mostly online news and explainers with overlapping content, I expect a sentence/paragraph/section strategy may ultimately be better, but I want to test the 300-token baseline first.
 
-Results for Strategy 1:
-Strategy 1: 300 chunk/word and 50 chunk overlap strategy yielded 
+**Results for Strategy 1:** Chunk_size(words) = 300, Overlap = 50 
 
 Returned 3 300 chunk excerpts and answered question partially correctly. 
 
-Retrieved chunks:
+**Retrieved chunks:**
 
 1.
      1. Should You Switch Your Student Loans To The New Repayment Assistance Plan (distance=0.5522, words=300)
@@ -120,14 +115,13 @@ even if those loans are consolidated. Drawbacks Of Moving Student Loans To Repay
 
 A: According to Source 2, RAP is not indexed for inflation, so a borrower whose income merely kept pace with inflation could be bumped into higher payment tiers. This could cause their monthly payment to double over 20 years without a corresponding increase in income.
 
-Evaluation: missing part of answer (RAP has no payment cap (IBR and PAYE cap payments at the 10-year Standard amount), and is citing citation Source 2 instead of Source 1 and 8. The source is also in Source 1, apparently, so Claude missed that when generating test questions. My model isn't perfect. I want to try with a smaller chunking strategy, and then try out section based chunking. 
+**Evaluation:** missing part of answer (RAP has no payment cap (IBR and PAYE cap payments at the 10-year Standard amount), and is citing citation Source 2 instead of Source 1 and 8. The source is also in Source 1, apparently, so Claude missed that when generating test questions. My model isn't perfect. I want to try with a smaller chunking strategy, and then try out section based chunking. 
 
-Results for Strategy 2
-Chunk_size(words) = 300
-Overlap = 40 
+**Results for Strategy 2** Chunk_size(words) = 150, Overlap = 40 
 
+Returned 3 150 chunk excerpts and answered question partially correctly. 
 
-Retrieved chunks:
+**Retrieved chunks:**
 
 1. Should You Switch Your Student Loans To The New Repayment Assistance Plan (distance=0.5222, words=150)
      1. and directed principal payment are major benefits of RAP, there are also some serious downsides. In addition to being more expensive than SAVE, PAYE, and new IBR (which will cause all of those borrowers to experience higher monthly payments on their federal student loans when they are forced to change plans), RAP will have no cap or upper limits on high the payments can get. IBR and PAYE, on the other hand, cap monthly student loan payments at the amount equivalent to the 10-year Standard plan. That’s a critical downside of RAP, because that means that at some point, payments under RAP could become much more expensive than IBR and other federal student loan repayment plan options as a borrower’s income increases over time. RAP will have other payment quirks that are arguably downsides. Unlike all other income- driven repayment plans, RAP will have a minimum required monthly payment of
@@ -137,15 +131,15 @@ Retrieved chunks:
      3. radar. Critics counter that $10 a month still matters to families already struggling to juggle rent, food, and childcare costs. If you’re used to a $0 bill, plan for $120 a year under RAP. Build an automatic transfer on payday or mark your calendar so a missed $10 doesn’t snowball into late fees and credit-score damage. And recertify your income every year. Falling even a few months behind could push your payment above the $10 floor. Deferment & forbearance: Why RAP is stricter than current rules SAVE offered struggling borrowers multiple off-ramps, including $0 payments for low-income borrowers and multi-year deferment and forbearance options. Under RAP, payments remain low by capping interest and charging just $10. Yet, it removes the long deferment windows that protect a borrower’s credit during prolonged hardship (though it does still allow administrative forbearance). For anyone with unstable income, those tighter limits make RAP significantly less
 According to Source 1, RAP could become more expensive over time because it has no cap or upper limits on how high the payments can get, unlike IBR and PAYE which cap monthly student loan payments at the amount equivalent to the 10-year Standard plan.
 
-Evaluation: Now the results missing part of answer (RAP is not indexed for inflation), and is now citing source 1 (the source my answer key has listed as correct). 
+**Evaluation:** Now the results missing part of answer (RAP is not indexed for inflation), and is now citing source 1 (the source my answer key has listed as correct). 
 
-Claude is suggesting that I improve the prompting, increase N_RESULTS to give the model more candidate evidence to combine, increase overlap, experiment with sentence/paragraph/section chunking, and use a stronger embedding model but first I will commit here so that you can evaluate project before I make more changes.  
+Notes: Claude is suggesting that I improve the prompting, increase N_RESULTS to give the model more candidate evidence to combine, experiment with sentence/paragraph/section chunking, and use a stronger embedding model but first I will commit here so that you can evaluate project before I make more changes.  
 
-I have made several changes to improve the performance of my responses. Let's see what we get back. 
+I have made several changes to improve the performance of my responses. I have implemented Claude's suggestions to  improve the prompting, increase N_RESULTS=7  to give the model more candidate evidence to combine, experiment with sentence/paragraph/section chunking, and use a stronger embedding model (upgraded from all-MiniLM-L6-v2 to all-mpnet-base-v2) Let's see what we get back. 
 
-Results for Strategy 3: Section Based Chunking + N_RESULTS - 7 + prompt changes + new embedding model 
+**Results for Strategy 3:** Section Based Chunking + N_RESULTS - 7 + prompt changes + new embedding model** 
 
-Retrieved chunks:
+**Retrieved chunks:**
 
 1. 
      8. Student Loan Repayments Are Being Overhauled (distance=0.5626, words=78)
@@ -178,37 +172,37 @@ RAP could become more expensive over time because it is not indexed for inflatio
 
 Sources: [8. Student Loan Repayments Are Being Overhauled], [3. How Will Your Student Loan Payment Change With The Repayment Assistance Plan]
 
-Evaluation: Despite all of the changes that I've made, the Student Loan Advisor is still only returning one out of two correct answers to my question, and one out of two correct citations. 
+**Evaluation:** Despite all of the changes that I've made, the Student Loan Advisor is still only returning one out of two correct answers to my question, and one out of two correct citations. 
 
 More tuning is needed to get the desired result. I will commit here so you can see my progress. 
 
-Results for strategy 4: All changes from Strategy 3 + N_RESULTS = 10 + strengthening the prompt to: 
+**Results for strategy 4:** All changes from Strategy 3 + N_RESULTS = 10 + strengthening the prompt to: 
 
      - explicitly require using only provided excerpts
      - ask for separate reasons when the question requests them
      - require a final Sources: [...] listing
 i    - included section headers in context blocks when available
 
-Finally, instead of getting a collection of chunks, I got the answer that included the information I was looking for. However, the app did not cite both of the sources I was looking for. I will make some more adjustment to ensure that all relevant information is cited in the sources. 
+**Evaluation:** Finally, instead of getting a collection of chunks, I got the answer that included the information I was looking for. However, the app did not cite both of the sources I was looking for. I will make some more adjustment to ensure that all relevant information is cited in the sources. 
 
 Financial Aid Advisor: 
 
 ![alt text](good_chatbot_response.png)
 
-Strategy 5: Updated prompt and system_prompt in generator.py again to ensure each relevant citation is being returned. Also added fallback logic to ensure each relevant citation was being appended. 
+**Strategy 5:**  Updated prompt and system_prompt in generator.py again to ensure each relevant citation is being returned. Also added fallback logic to ensure each relevant citation was being appended. 
 
 ![alt text](<better chatbot respoonse.png>)
 
-Evaluation: The chatbot is now providing the correct answer to my question, and citing each source. It is even citing sources that were not cited in the initial creation of the question generation, which was performed by Claude.ai. I am OK with this: the information contained in sources 3 and 5 also contain relevant information, although not as relevant as Sources 1 and 8.
+**Evaluation:** The chatbot is now providing the correct answer to my question, and citing each source. It is even citing sources that were not cited in the initial creation of the question generation, which was performed by Claude.ai. I am OK with this: the information contained in sources 3 and 5 also contain relevant information, although not as relevant as Sources 1 and 8.
 ![alt text](sources.png)
 
-Strategy 5: App reverted to dropping 1 of 2 parts of answer, so Claude and I made updates to upgrade default model llama-3.1-8b-instant → llama-3.3-70b-versatile for reliable multi-chunk synthesis,  strengthened the prompt to enumerate every distinct factor, including lower-ranked excerpts, and to not stop at the first reason, and added _normalize_source_line() so the final Sources: line always shows real article names (mapping the model's Source N labels back to articles).
+**Strategy 6:**  Upgraded default model llama-3.1-8b-instant → llama-3.3-70b-versatile for reliable multi-chunk synthesis,  strengthened the prompt to enumerate every distinct factor, including lower-ranked excerpts, and to not stop at the first reason, and added _normalize_source_line() so the final Sources: line always shows real article names (mapping the model's Source N labels back to articles).
 
-Evaluation: Chatbot gives perfect response, with all required information included in expected answer and even exceeds what was expected. It also provides the two expected sources. I am happy with the result!
+**Evaluation:** Chatbot gives perfect response, with all required information included in expected answer and even exceeds what was expected. It also provides the two expected sources. I am happy with the result!
 
 ![alt text](<perfect chatbot response.png>)
 
-Strategy 6 (2026-06-07): Investigated a second test question that omitted part of its expected answer — "What must a Parent PLUS borrower do to keep access to an income-driven plan, and which plan can they get?" Expected the answer to include the step "make at least one payment under ICR" before the 2028 phase-out, but the chatbot left it out.
+**Strategy 7:**  Investigated a second test question that omitted part of its expected answer — "What must a Parent PLUS borrower do to keep access to an income-driven plan, and which plan can they get?" Expected the answer to include the step "make at least one payment under ICR" before the 2028 phase-out, but the chatbot left it out.
 
 Diagnosis: Unlike the RAP question (which was a *generation* problem — both chunks were retrieved and the model dropped one), this one is a **retrieval failure caused by chunking**. The "make at least one payment" detail lives in a single NYT chunk that opens "After consolidating, borrowers aren't done…" and never restates "Parent PLUS." For the Parent PLUS query it ranks ~184/334 (distance ≈ 0.64), far outside the top-10 (cutoff ≈ 0.45), so the generator never sees it.
 
@@ -216,7 +210,7 @@ I tested two fixes empirically before committing to either:
 - Prepending the article title + section header to each chunk's embedded text → moved the chunk only from rank ~184 to ~133 (0.64 → 0.58). Not enough; reverted it (it also added redundancy and there was no measurable global benefit).
 - Simulated cross-section overlap (carrying the neighboring Parent PLUS chunk's text in) → 0.64 → 0.62. Also insufficient.
 
-Conclusion: the fact-bearing sentence is genuinely semantically distant from the "Parent PLUS" framing, so dense-retrieval tuning can't easily surface it. Documented as a known limitation in the README Failure Case Analysis. A real fix would need hybrid/keyword retrieval, query expansion, subject-resolution preprocessing, or a re-ranking stage — deferred rather than over-fitting the pipeline to one question. RAP question re-verified: still returns both factors (no regression).
+**Conclusion:** the fact-bearing sentence is genuinely semantically distant from the "Parent PLUS" framing, so dense-retrieval tuning can't easily surface it. Documented as a known limitation in the README Failure Case Analysis. A real fix would need hybrid/keyword retrieval, query expansion, subject-resolution preprocessing, or a re-ranking stage — deferred rather than over-fitting the pipeline to one question. RAP question re-verified: still returns both factors (no regression). A failure case analysis is provided in the README.md file. 
 ---
 
 ## Retrieval Approach
@@ -256,16 +250,16 @@ This is also part of the recommended stack, so I feel good about my decision.
 
 EDIT: To improve model responses, I am changing the embedding model to all-mpnet-base-v2. This is because I wasn't getting great results back using all-MiniLM-L6-v2 via sentence-transformers.  
 
-Using , I should get:
+Using all-mpnet-base-v2, I should get:
 
      -Higher accuracy: It produces more semantically precise vectors, so retrieval tends to be better for nuanced queries.
      -Better handling of complex text: It is more robust for domain-specific language like student loan policy and financial guidance.
      -Stronger semantic similarity: Especially helpful when query-document matching needs more fine-grained meaning.
      -Still local-friendly: It can still be used with sentence-transformers locally, though it is heavier than all-MiniLM-L6-v2.
 
-According to Claude:
+**According to Claude: **
 
-Why all-mpnet-base-v2 is better
+**Why all-mpnet-base-v2 is better:**
 all-mpnet-base-v2 is generally a stronger embedding model than all-MiniLM-L6-v2 because:
 
      -Higher accuracy: It produces more semantically precise vectors, so retrieval tends to be better for nuanced queries.
