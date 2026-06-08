@@ -193,7 +193,7 @@ Eventually, after experimenting extensively with the chunkking strategy and stil
 The test for every sentence you write: could it have come from anywhere other than the provided rule text? If yes, delete it.
 
 **This was updated in generator.py to the following:**
-  system_prompt = (
+  ``` system_prompt = (
         "You are a student loan advisor. Answer the user's question using only the provided article excerpts. "
         "Do not use any outside knowledge, prior experience, or assumptions. Treat the excerpts as the only source of truth. "
         "Only answer if the needed information is explicitly present in the excerpts. Do not infer, invent, or fill in missing details. "
@@ -211,7 +211,7 @@ The test for every sentence you write: could it have come from anywhere other th
         "If the provided excerpts do not contain enough information to answer, say that you couldn't find the answer in the provided article excerpts."
 
 
-    )
+    ) ```
 
 **How source attribution is surfaced in the response:**
 
@@ -353,4 +353,34 @@ i    - included section headers in context blocks when available
 !. Hybrid Search
 2. Chunking Strategy Comparison - I did this while completing the project. My approach to project was an experimental one, where I just kept iterating on chunking strategy along with other improvements until I got the answer that I was looking for. I didn't read the part that I shouldn't try the stretch features until I completed all of the required features, so that is on me. 
 3. Metadata Filtering - This was also done while completing the project. As I kept iterating, I eventually ended up with a source based chunking strategy were source was an attribute on the chunks that are returned. As currently implemented, the user will not see the chunks with the source attribute if they ask a question that the Student Loan Advisor can ansewr. If the chatbot does not know the answer, it will return the chunks with thier source attribute. This can be seen on lines 61 - 107 in the Sample Chunks section above. 
-4. Conversational Memory - 
+** 4.  Conversational Memory**  - ## Conversational Memory 
+
+The advisor now supports multi-turn conversations where a follow-up question relies on context from earlier turns. This is implemented in two layers:
+
+1. **Retrieval memory (query contextualization).** Before retrieval, the latest message is rewritten into a standalone search query using the conversation (`contextualize_query()` in `generator.py`). This resolves pronouns and omitted subjects ("it", "that", "those borrowers") so retrieval searches for the real topic — the key to making memory genuine rather than a coincidence of topic overlap. Retrieval then runs on the rewritten query.
+2. **Generation memory.** The recent conversation turns (capped at the last 6 exchanges) are passed into the LLM's `messages`, so the answer reflects the exchange. Grounding is preserved: the system prompt allows using history only to *interpret* the question, while every factual claim must still come from the retrieved excerpts.
+
+The **Retrieval debug** panel displays the rewritten query whenever it differs from what the user typed, making the memory visible.
+
+**Demonstration (actual 3-turn run):**
+
+> **Turn 1 — User:** "What is the Repayment Assistance Plan (RAP)?"
+> **Advisor:** 
+![alt text](<conversation Q1.png>)
+
+> **Turn 2 — User:** "How is its minimum monthly payment calculated?"
+> *Rewritten query used for retrieval:* "Repayment Assistance Plan minimum monthly payment calculation"
+> **Advisor:** 
+![alt text](<conversation Q2.png>)
+
+> **Turn 3 — User:** "And how does that compare to what other plans require?"
+> *Rewritten query used for retrieval:* "minimum monthly payment requirements for different student loan repayment plans compared to the Repayment Assistance Plan"
+> **Advisor:** 
+![alt text](<conversation Q3.png>)
+
+Note: Some plans have a $0 monthly payment for low income borrowers, so I don't believe that this answer is complete. 
+
+In Turns 2 and 3 the user's message contains **no topic keywords on its own** ("its", "that") — retrieval only finds the right chunks because the conversation resolved the references. That is the evidence the response reflects memory rather than topic overlap.
+
+**Cost note:** the rewrite adds one small (~120-token) LLM call per follow-up turn (skipped on the first turn and whenever there is no history).
+
