@@ -1,7 +1,7 @@
 import gradio as gr
 from ingest import load_documents, chunk_document
 from retriever import embed_and_store, retrieve, get_collection
-from generator import generate_response
+from generator import generate_response, contextualize_query
 
 
 # ---------------------------------------------------------------------------
@@ -68,8 +68,16 @@ def chat(message, chat_history):
         return chat_history or [], "", ""
 
     chat_history = _normalize_chat_history(chat_history or [])
-    retrieved = retrieve(message)
-    answer = generate_response(message, retrieved)
+
+    # Conversational memory: rewrite a follow-up into a standalone query using
+    # the conversation, then retrieve on that, then generate with the history.
+    search_query = contextualize_query(message, chat_history)
+    retrieved = retrieve(search_query)
+    answer = generate_response(message, retrieved, chat_history=chat_history)
+
+    debug_text = ""
+    if search_query.strip() != message.strip():
+        debug_text += f"Rewritten query (used for retrieval):\n  {search_query}\n\n"
 
     if retrieved:
         chunk_debug = []
@@ -79,9 +87,9 @@ def chat(message, chat_history):
                 f"{index}. {chunk['student_loan_article']} (score={chunk.get('similarity', 0.0):.4f}, distance={chunk['distance']:.4f}, words={len(snippet.split())})\n"
                 f"   {snippet}"
             )
-        debug_text = "Retrieved chunks:\n" + "\n\n".join(chunk_debug)
+        debug_text += "Retrieved chunks:\n" + "\n\n".join(chunk_debug)
     else:
-        debug_text = "No chunks were retrieved for this query."
+        debug_text += "No chunks were retrieved for this query."
 
     debug_text += "\n\n---\n"
     chat_history.append({"role": "user", "content": message})

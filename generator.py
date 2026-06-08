@@ -15,7 +15,74 @@ else:
     _client_error = RuntimeError("GROQ_API_KEY is not configured.")
 
 
-def generate_response(query, retrieved_chunks):
+# Keep memory bounded so we don't grow the prompt (and token cost) without limit.
+MAX_HISTORY_TURNS = 6
+
+
+def _history_messages(chat_history, max_turns=MAX_HISTORY_TURNS):
+    """Return the last `max_turns` exchanges as OpenAI-style role/content dicts."""
+    if not chat_history:
+        return []
+
+    valid = [
+        {"role": m["role"], "content": m["content"]}
+        for m in chat_history
+        if isinstance(m, dict)
+        and m.get("role") in ("user", "assistant")
+        and m.get("content")
+    ]
+    # Each exchange is a user + assistant pair; keep the most recent ones.
+    return valid[-(max_turns * 2):]
+
+
+def contextualize_query(message, chat_history):
+    """
+    Rewrite a follow-up question into a standalone search query.
+
+    When the latest message depends on earlier turns (pronouns like "it",
+    "that plan", or an omitted subject), this resolves those references using
+    the conversation so retrieval searches for the real topic rather than the
+    bare follow-up. Returns the original message unchanged when there is no
+    usable history, the model is unavailable, or anything goes wrong.
+    """
+    history = _history_messages(chat_history)
+    if not history or _client is None:
+        return message
+
+    transcript = "\n".join(
+        f"{'User' if m['role'] == 'user' else 'Advisor'}: {m['content']}"
+        for m in history
+    )
+    system = (
+        "You rewrite a user's latest message into a single standalone search query for a "
+        "student loan document search. If the latest message refers to earlier turns (via "
+        "pronouns such as 'it', 'that', 'they', or an omitted subject), resolve those "
+        "references using the conversation so the query stands on its own. Preserve the "
+        "user's wording and keywords. If the message is already self-contained, return it "
+        "unchanged. Return ONLY the rewritten query text — no preamble, quotes, or labels."
+    )
+    user = (
+        f"Conversation so far:\n{transcript}\n\n"
+        f"Latest message: {message}\n\nStandalone query:"
+    )
+    try:
+        response = _client.chat.completions.create(
+            model=LLM_MODEL,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            temperature=0.0,
+            max_completion_tokens=120,
+        )
+        rewritten = (response.choices[0].message.content or "").strip()
+        return rewritten or message
+    except Exception:
+        # Never let rewriting break the chat — fall back to the raw message.
+        return message
+
+
+def generate_response(query, retrieved_chunks, chat_history=None):
     """
     Generate a grounded answer from retrieved rule chunks.
 
@@ -44,6 +111,9 @@ My response should:
 
     system_prompt = (
         "You are a student loan advisor. Answer the user's question using only the provided article excerpts. "
+        "You may use the earlier conversation turns to interpret follow-up questions (for example, resolving "
+        "references like 'it', 'that plan', or 'those borrowers' to what was discussed), but every factual "
+        "claim in your answer must still be supported by the provided excerpts — not by the conversation alone. "
         "Do not use any outside knowledge, prior experience, or assumptions. Treat the excerpts as the only source of truth. "
         "Only answer if the needed information is explicitly present in the excerpts. Do not infer, invent, or fill in missing details. "
         "If the excerpts do not contain enough information to answer, say: \"I could not find the answer in the provided excerpts.\" "
@@ -82,13 +152,15 @@ My response should:
         + f"\n\nQuestion: {query}"
     )
 
+    messages = [{"role": "system", "content": system_prompt}]
+    # Include recent conversation turns so the model has memory of the exchange.
+    messages.extend(_history_messages(chat_history))
+    messages.append({"role": "user", "content": prompt})
+
     try:
         response = _client.chat.completions.create(
             model=LLM_MODEL,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt},
-            ],
+            messages=messages,
             temperature=0.0,
             max_completion_tokens=512,
         )
@@ -152,6 +224,17 @@ def _normalize_source_line(answer, retrieved_chunks):
             idx = int(source_num) - 1
             if 0 <= idx < len(retrieved_chunks):
                 _add(retrieved_chunks[idx].get("student_loan_article", ""))
+
+    if not names:
+        # The model may have written bare article names (no brackets, no "Source N").
+        # Match any retrieved article names that appear in the line, in order.
+        present = [
+            (raw.find(art), art)
+            for art in {c.get("student_loan_article", "") for c in retrieved_chunks}
+            if art and art in raw
+        ]
+        for _, art in sorted(present):
+            _add(art)
 
     if not names:
         return answer
