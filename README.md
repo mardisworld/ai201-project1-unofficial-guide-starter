@@ -58,6 +58,54 @@ The original strategy of 300 tokens returned 123 chunks.
 
 I experimented with this extensively until I was satisfied with Chatbot's near perfect retrieval. This is documented in planning.md: please read for details. 
 
+## Sample Chunks
+
+Here are 5 of the strongest chunks from your vector store — these are real entries pulled live (low cosine distance = high relevance), each shown with its source document name (student_loan_article) and source attributes (chunk_id + section_header) exactly as stored in ChromaDB.
+
+Chunk 1 — RAP monthly payment formula
+
+Source document: 14. One Big Beautiful Bill Act Important Definitions
+chunk_id: 14._one_big_beautiful_bill_act_important_definitions_33
+section_header: Monthly Payment Amount
+distance: 0.214 (99 words)
+Monthly Payment Amount
+
+Your required monthly payment amount under RAP is a percentage of your annual income, most commonly your adjusted gross income (AGI), divided by 12… Your monthly payment amount is then reduced by $50 for each dependent you claim on your federal tax return; however, your monthly payment may not be less than $10 a month. The percentage of your annual income varies depending on your AGI…
+
+Chunk 2 — RAP forgiveness-credit transfer rules
+
+Source document: 5. Student Loan Borrowers Will Have Two New Repayment Options Come July 1
+chunk_id: 5._student_loan_borrowers_will_have_two_new_repayment_options_come_july_1_7
+section_header: None
+distance: 0.320 (99 words)
+If that's the case, you can remain in ICR or PAYE until the plans expire on July 1, 2028… If you transfer from RAP to another IDR plan, like IBR, the payments you made on RAP won't count on your timeline toward loan forgiveness… "While payments on the existing plans, such as IBR, PAYE and ICR count towards the RAP's 30-year forgiveness, RAP payments don't count towards the other plans' forgiveness timeline."
+
+Chunk 3 — PAYE regulation contradiction
+
+Source document: 2. These Student Loan Borrowers May Get Locked Out Of Key Repayment Plan Unless They Act Quickly
+chunk_id: 2._these_student_loan_borrowers_may_get_locked_out_of_key_repayment_plan_unless_they_act_quickly_9
+section_header: None
+distance: 0.344 (180 words)
+The new regulations also don't appear to directly align with the text of the One Big, Beautiful Bill Act… The bill does not expressly contain the new enrollment restrictions enumerated in the department's updated regulations… Those who are already enrolled in PAYE may want to stick with that plan for now; otherwise, they may not be able to switch back…
+
+Chunk 4 — Consolidation forgiveness risk
+
+Source document: 8. Student Loan Repayments Are Being Overhauled
+chunk_id: 8._student_loan_repayments_are_being_overhauled_17
+section_header: Does it make sense to consolidate?
+distance: 0.365 (96 words)
+Does it make sense to consolidate?
+
+Maybe not… Borrowers who consolidate will lose any existing income-driven repayment credits toward forgiveness, a result of the court decision that vacated the rule that created the SAVE plan… Those who consolidate after July 1 will be eligible for only the two new repayment plans — RAP and tiered standard — and lose access to existing ones, including I.B.R.
+
+Chunk 5 — RAP not indexed for inflation
+
+Source document: 8. Student Loan Repayments Are Being Overhauled
+chunk_id: 8._student_loan_repayments_are_being_overhauled_11
+section_header: How does the new RAP plan work?…
+distance: 0.298 (78 words)
+…These features were crafted so a borrower's balance won't grow over time. But there's a significant drawback that could make this plan more expensive over time: RAP is not indexed for inflation, so a borrower whose income merely kept pace with inflation could be bumped into higher payment tiers.
+
 ---
 
 ## Embedding Model
@@ -93,6 +141,14 @@ If I wanted fewer chunks per article, a higher-capacity model like OpenAI’s te
 all-MiniLM-L6-v2 is fine for English sources.
 If my content were multilingual, I would switch to a true multilingual embedding model such as all-mpnet-base-v2, sentence-transformers/LaBSE, or an API-hosted multilingual model.
 That choice matters if I ever add non-English student loan guidance or source material.
+
+Eventually, after experimenting with different chunking strategies, I switched to using all-mpnet-base-v2 to achieve:
+     -Higher accuracy: It produces more semantically precise vectors, so retrieval tends to be better for nuanced queries.
+     -Better handling of complex text: It is more robust for domain-specific language like student loan policy and financial guidance.
+     -Stronger semantic similarity: Especially helpful when query-document matching needs more fine-grained meaning.
+     -Still local-friendly: It can still be used with sentence-transformers locally, though it is heavier than all-MiniLM-L6-v2.
+
+I am not sure if this model provides better multilingual support. I suspect that it does. 
 
 3. Accuracy on domain-specific text
 
@@ -292,3 +348,9 @@ Chunking strategy, embedding model, system prompting, and LLM were all requuired
      - require a final Sources: [...] listing
 i    - included section headers in context blocks when available
 - *What I changed or overrode:* I implemented Claude's changes. This produced better results, but I still had to go through a few more iterations before the system returned near perfect results. 
+
+# Stretch Assignments
+!. Hybrid Search
+2. Chunking Strategy Comparison - I did this while completing the project. My approach to project was an experimental one, where I just kept iterating on chunking strategy along with other improvements until I got the answer that I was looking for. I didn't read the part that I shouldn't try the stretch features until I completed all of the required features, so that is on me. 
+3. Metadata Filtering - This was also done while completing the project. As I kept iterating, I eventually ended up with a source based chunking strategy were source was an attribute on the chunks that are returned. As currently implemented, the user will not see the chunks with the source attribute if they ask a question that the Student Loan Advisor can ansewr. If the chatbot does not know the answer, it will return the chunks with thier source attribute. This can be seen on lines 61 - 107 in the Sample Chunks section above. 
+4. Conversational Memory
