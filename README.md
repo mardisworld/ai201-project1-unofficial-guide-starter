@@ -350,10 +350,18 @@ i    - included section headers in context blocks when available
 - *What I changed or overrode:* I implemented Claude's changes. This produced better results, but I still had to go through a few more iterations before the system returned near perfect results. 
 
 # Stretch Assignments
-!. Hybrid Search
-2. Chunking Strategy Comparison - I did this while completing the project. My approach to project was an experimental one, where I just kept iterating on chunking strategy along with other improvements until I got the answer that I was looking for. I didn't read the part that I shouldn't try the stretch features until I completed all of the required features, so that is on me. 
-3. Metadata Filtering - This was also done while completing the project. As I kept iterating, I eventually ended up with a source based chunking strategy were source was an attribute on the chunks that are returned. As currently implemented, the user will not see the chunks with the source attribute if they ask a question that the Student Loan Advisor can ansewr. If the chatbot does not know the answer, it will return the chunks with thier source attribute. This can be seen on lines 61 - 107 in the Sample Chunks section above. 
-** 4.  Conversational Memory**  - ## Conversational Memory 
+
+## Hybrid Search
+
+## Chunking Strategy Comparison  
+
+I did this while completing the project. My approach to project was an experimental one, where I just kept iterating on chunking strategy along with other improvements until I got the answer that I was looking for. I didn't read the part that I shouldn't try the stretch features until I completed all of the required features, so that is on me. 
+
+## $$Metadata Filtering 
+
+This was also done while completing the project. As I kept iterating, I eventually ended up with a source based chunking strategy were source was an attribute on the chunks that are returned. As currently implemented, the user will not see the chunks with the source attribute if they ask a question that the Student Loan Advisor can ansewr. If the chatbot does not know the answer, it will return the chunks with thier source attribute. This can be seen on lines 61 - 107 in the Sample Chunks section above. 
+
+ ## Conversational Memory 
 
 The advisor now supports multi-turn conversations where a follow-up question relies on context from earlier turns. This is implemented in two layers:
 
