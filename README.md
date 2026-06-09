@@ -365,6 +365,16 @@ The two rankings are merged with **Reciprocal Rank Fusion (RRF)**: each chunk's 
 
 **Files:** `hybrid_retriever.py` (new), wired into `app.py`'s strategy selector; `rank-bm25` added to `requirements.txt`.
 
+**Semantic vs. Hybrid comparison (top 3 evaluation questions).** I ran each question through both strategies (same LLM, temperature 0) and compared the generated answers:
+
+| # | Question | Semantic answer | Hybrid answer | Which was better? |
+|---|----------|-----------------|---------------|-------------------|
+| 1 | Why could RAP become more expensive over time despite its low starting percentages? | Both required factors: (1) RAP is **not indexed for inflation**, so income merely keeping pace bumps you into higher tiers; (2) RAP has **no payment cap**, unlike IBR/PAYE which cap at the 10-year Standard amount. Sources: [8], [1] | Same two factors, near-identical wording. Sources: [8], [1] | **Tie** — both complete and correct. Semantic already retrieved both chunks, so hybrid adds nothing here. |
+| 2 | What must a Parent PLUS borrower do to keep access to an income-driven plan, and which plan can they get? | Consolidate into a Direct Consolidation Loan before July 1, 2026, then enroll before July 1, 2028; eligible for IBR. Sources: [10], [11], [8] | Same answer; cites one extra source [7]. Both **omit** the "make at least one ICR payment" step. | **Tie (both partial)** — neither includes the one-payment step (the documented retrieval failure). Hybrid surfaces more keyword chunks/sources but the final answer is equivalent. |
+| 3 | How do "old IBR" and "new IBR" differ? | Old: 15% of discretionary income, 25-year forgiveness (loans before 7/1/2014). New: 10%, 20-year (loans on/after 7/1/2014). Sources: [11], [7] | Same core split, **plus more detail**: payments are on income above 150% of the federal poverty guideline ($0 below it), and the new-IBR window is 7/1/2014–7/1/2026. Source: [11] | **Hybrid slightly better** — more precise and complete (adds the 150% FPL threshold and $0-payment detail) while staying accurate, though it cited fewer sources. |
+
+**Takeaway:** across these three, hybrid tied semantic on the questions semantic already handled well (Q1, Q2), did not fix the hard failure case (Q2's missing step), and produced a richer, more detailed answer on Q3. Hybrid's value is mainly on keyword-heavy or detail-dense questions; it is not a universal improvement over semantic search for this corpus.
+
 ## Chunking Strategy Comparison  
 
 I did this while completing the project. My approach to project was an experimental one, where I just kept iterating on chunking strategy along with other improvements until I got the answer that I was looking for. This is documented extensively in the planning.md file. I didn't read the part that I shouldn't try the stretch features until I completed all of the required features, so that is on me. 
