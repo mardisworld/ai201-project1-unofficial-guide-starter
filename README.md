@@ -60,7 +60,7 @@ I experimented with this extensively until I was satisfied with Chatbot's near p
 
 ## Sample Chunks
 
-Here are 5 of the strongest chunks from your vector store — these are real entries pulled live (low cosine distance = high relevance), each shown with its source document name (student_loan_article) and source attributes (chunk_id + section_header) exactly as stored in ChromaDB.
+Here are 5 of the strongest chunks from my vector store — these are real entries pulled live (low cosine distance = high relevance), each shown with its source document name (student_loan_article) and source attributes (chunk_id + section_header) exactly as stored in ChromaDB.
 
 Chunk 1 — RAP monthly payment formula
 
