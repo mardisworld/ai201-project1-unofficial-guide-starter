@@ -422,3 +422,7 @@ In Turns 2 and 3 the user's message contains **no topic keywords on its own** ("
 
 **Cost note:** the rewrite adds one small (~120-token) LLM call per follow-up turn (skipped on the first turn and whenever there is no history).
 
+# Demo Link
+
+https://www.loom.com/share/6fca609d629042129d3342cca1da50be
+
