@@ -220,6 +220,15 @@ article NAME shown after each 'Source N:' label — never write the literal 'Sou
 
 **Sources:** [8. Student Loan Repayments Are Being Overhauled], [1. Should You Switch Your Student Loans To The New Repayment Assistance Plan]
 
+**Out of Scope Queries**
+
+I thought this question would not be answered by the articles, but it actually gave back a valid response.
+
+![alt text](out-of-scope-1.png)
+
+I expanded the out of scope nature of the query, and got a failure message. 
+
+![alt text](out-of-scope-2.png)
 
 ---
 
