@@ -240,7 +240,7 @@ Summary of running all 5 test questions:
 | 2 | What must a Parent PLUS borrower do to keep IDR access, and which plan? | Partially relevant | Partially accurate — omits the "make at least one payment under ICR" step (see Failure Case Analysis) |
 | 3 | How do "old IBR" and "new IBR" differ? | Relevant | Accurate — 15% / 25 years vs. 10% / 20 years |
 | 4 | What is the apparent contradiction in the Education Department's PAYE rules? | Relevant | Accurate — public "no restriction" guidance vs. the restrictive finalized regulations |
-| 5 | What risk does consolidating loans pose to forgiveness progress? | Relevant | Not evaluated this run — generation was blocked by a Groq daily token rate limit (HTTP 429). Retrieval *did* surface the correct evidence (consolidating erases existing IDR forgiveness credit; consolidating after July 1 leaves only RAP + tiered standard), so this is an API quota limit, not a pipeline-quality issue. |
+| 5 | What risk does consolidating loans pose to forgiveness progress? | Relevant | Accurate -  Retrieval surfaced the correct evidence (consolidating erases existing IDR forgiveness credit; consolidating after July 1 leaves only RAP + tiered standard).               |
 
 **Retrieval quality:** Relevant / Partially relevant / Off-target  
 **Response accuracy:** Accurate / Partially accurate / Inaccurate
